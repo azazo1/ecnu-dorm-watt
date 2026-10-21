@@ -382,6 +382,7 @@ dormwatt client archive delete 202601 --room 2
 ```shell
 dormwatt client serve
 dormwatt client serve --open
+dormwatt client serve --no-open
 dormwatt client serve --port <local_port>
 dormwatt client serve --no-tray
 dormwatt client serve --tray=on
@@ -393,6 +394,7 @@ dormwatt client serve --tray=on
 |------|------|
 | `--port` | 覆盖监听端口, 只改本次运行 |
 | `--open` | 启动后打开默认浏览器 |
+| `--no-open` | 不自动打开浏览器, 覆盖 `local.open_browser` |
 | `--tray` | `auto`, `on`, `off`, 默认取配置中的 `local.tray` |
 | `--no-tray` | 等价于 `--tray=off` |
 
@@ -404,7 +406,7 @@ dormwatt client serve --tray=on
 - 托管 Web 静态资源, 提供本地 API.
 - 启动后台状态轮询.
 - 根据 `--tray` 决定是否启动托盘. `auto` 在无桌面会话时自动关闭并记录 info 日志.
-- `--open` 启动后打开默认浏览器.
+- `--open` 启动后打开默认浏览器; `--no-open` 覆盖配置中的 `local.open_browser`, 不打开浏览器.
 - 收到 SIGINT / SIGTERM, 托盘 Quit 或 `client quit` 时, 统一关闭监听, 删除 `runtime.json`, 退出.
 - 前台运行, 日志输出到 stderr 与文件. 是否做成系统服务由用户决定.
 

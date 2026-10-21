@@ -456,7 +456,7 @@ systemctl --user enable --now dormwatt-client
 Type=Application
 Name=DormWatt
 Comment=DormWatt local client
-Exec=/home/alice/.local/bin/dormwatt client serve --open
+Exec=/home/alice/.local/bin/dormwatt client serve --no-open
 Terminal=false
 X-GNOME-Autostart-enabled=true
 ```
@@ -608,47 +608,14 @@ curl -fsS https://example.com/dormwatt/api/v1/health
 - [ ] 定期备份并验证可恢复.
 - [ ] 系统时间同步正常.
 
-## 10. 计划的 just 命令
+## 10. just 命令
 
-项目根目录将提供 `justfile`:
+以仓库根目录的 `justfile` 为准, 常用:
 
-```just
-# 启动服务端
-server:
-    go run ./cmd/dormwatt server run
-
-# 启动本地客户端 (含托盘)
-client:
-    go run ./cmd/dormwatt client serve
-
-# 创建 token
-token name scope="read,write":
-    go run ./cmd/dormwatt server token create --name {{name}} --scope {{scope}}
-
-# 构建前端
-web:
-    cd web && bun install && bun run build
-
-# 构建桌面版 (含托盘, 需要 cgo)
-build: web
-    CGO_ENABLED=1 go build -trimpath -o dist/dormwatt ./cmd/dormwatt
-
-# 构建服务端静态版 (无托盘)
-build-server: web
-    CGO_ENABLED=0 go build -tags notray -trimpath -o dist/dormwatt-notray ./cmd/dormwatt
-
-# 运行托盘客户端
-tray: web
-    go run ./cmd/dormwatt client serve --tray=on
-
-# 测试
-test:
-    go test ./...
-
-# 子路径集成测试
-test-subpath:
-    go test ./internal/server/... -run TestBasePath
-```
+- `just server`: 构建无托盘服务端并启动.
+- `just client`: 构建客户端并启动本地 Web 与托盘.
+- `just token name`: 创建服务端 token.
+- `just test`, `just test-race`: 运行测试.
 
 - 前端使用 bun, Go 依赖使用 `go mod`.
 - 发布前先构建前端, 再构建二进制.

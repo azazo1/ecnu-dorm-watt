@@ -24,6 +24,7 @@ func (a *App) newServeCommand() *cobra.Command {
 	var (
 		port    int
 		open    bool
+		noOpen  bool
 		trayOpt string
 		noTray  bool
 	)
@@ -34,6 +35,9 @@ func (a *App) newServeCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if port != 0 && (port < 1 || port > 65535) {
 				return usageErrorf("--port 必须在 1 到 65535 之间")
+			}
+			if open && noOpen {
+				return usageErrorf("--open 与 --no-open 不能同时使用")
 			}
 			cfg, configPath, err := a.loadClientConfig(true)
 			if err != nil {
@@ -115,7 +119,7 @@ func (a *App) newServeCommand() *cobra.Command {
 			fmt.Fprintf(a.stdout, "本地界面: %s\n", srv.URL())
 			a.log.Info("本地服务已就绪", "url", srv.URL(), "pid", os.Getpid())
 
-			if open || cfg.Local.OpenBrowser {
+			if (open || cfg.Local.OpenBrowser) && !noOpen {
 				go func() {
 					time.Sleep(150 * time.Millisecond)
 					if err := openURL(srv.URL()); err != nil {
@@ -131,6 +135,7 @@ func (a *App) newServeCommand() *cobra.Command {
 			} else if mode == "auto" && !hasDesktop {
 				a.log.Info("未检测到桌面会话, 以无托盘模式运行")
 			}
+			var runErr error
 			if !useTray {
 				select {
 				case <-ctx.Done():
@@ -138,16 +143,15 @@ func (a *App) newServeCommand() *cobra.Command {
 				case <-srv.Done():
 				}
 			} else {
-				if err := a.runTray(ctx, cancel, srv); err != nil {
-					return err
-				}
+				runErr = a.runTray(ctx, cancel, srv)
 			}
 			a.log.Info("正在关闭本地服务")
-			return nil
+			return runErr
 		},
 	}
 	cmd.Flags().IntVar(&port, "port", 0, "覆盖监听端口, 只改本次运行")
 	cmd.Flags().BoolVar(&open, "open", false, "启动后打开默认浏览器")
+	cmd.Flags().BoolVar(&noOpen, "no-open", false, "不自动打开浏览器, 覆盖配置中的 open_browser")
 	cmd.Flags().StringVar(&trayOpt, "tray", "", "托盘模式: auto, on, off, 默认取配置")
 	cmd.Flags().BoolVar(&noTray, "no-tray", false, "等价于 --tray=off")
 	return cmd
