@@ -124,7 +124,7 @@ func DefaultServer() ServerConfig {
 	return ServerConfig{
 		Version: 1,
 		Server: ServerSection{
-			Bind:              "127.0.0.1:20531",
+			Bind:              "127.0.0.1:20006",
 			AllowInsecureHTTP: false,
 			MaxBodyBytes:      64 * 1024,
 			ReadHeaderTimeout: Duration(10 * time.Second),
@@ -157,11 +157,11 @@ func DefaultClient() ClientConfig {
 	return ClientConfig{
 		Version: 1,
 		Server: ClientServerSection{
-			BaseURL:        "http://127.0.0.1:20531",
+			BaseURL:        "http://127.0.0.1:20006",
 			RequestTimeout: Duration(20 * time.Second),
 		},
 		Local: LocalSection{
-			Bind:        "127.0.0.1:20532",
+			Bind:        "127.0.0.1:20007",
 			OpenBrowser: true,
 			Tray:        "auto",
 			Notify:      true,

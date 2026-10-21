@@ -11,7 +11,7 @@ func TestJoinBaseURL(t *testing.T) {
 	}{
 		{"https://example.com/dormwatt/api", "/v1/records", "https://example.com/dormwatt/api/v1/records"},
 		{"https://example.com/dormwatt/api/", "v1/records", "https://example.com/dormwatt/api/v1/records"},
-		{"http://127.0.0.1:20531", "/v1/health", "http://127.0.0.1:20531/v1/health"},
+		{"http://127.0.0.1:20006", "/v1/health", "http://127.0.0.1:20006/v1/health"},
 	}
 	for _, tt := range tests {
 		got, err := JoinBaseURL(tt.base, tt.suffix)

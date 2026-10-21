@@ -147,7 +147,7 @@ Content-Type: application/problem+json
 
 ```toml
 [server]
-bind = "127.0.0.1:20531"
+# bind 使用默认值, 具体端口见 04-data-model.md.
 
 # 允许在非回环地址上使用明文 HTTP. 默认 false.
 allow_insecure_http = false
@@ -239,7 +239,7 @@ trusted_proxies = ["127.0.0.1/32", "::1/128"]
 
 ### 5.1 监听地址
 
-- 默认 `127.0.0.1:20532`.
+- 默认监听回环地址, 端口由 `client.toml` 的 `local.bind` 决定.
 - 非回环地址默认拒绝, 除非设置 `client.allow_remote = true`.
 - 开启 `allow_remote` 时启动日志警告, 并要求所有本地 API 请求携带本地 token.
 - 系统托盘与守护进程同进程, 不新增监听端口, 也不新增凭据.
@@ -253,12 +253,13 @@ trusted_proxies = ["127.0.0.1/32", "::1/128"]
 ```json
 {
   "pid": 12345,
-  "port": 20532,
+  "port": <local_port>,
   "token": "lw_...",
   "started_at": "2026-01-24T14:30:00+08:00"
 }
 ```
 
+- 示例中的 `<local_port>` 为占位符, 实际值取自 `local.bind`.
 - 文件位于数据目录, 权限 0600.
 - 正常退出时删除, 异常退出时由下次启动覆盖.
 - CLI 需要访问本地 API 时读取该文件.

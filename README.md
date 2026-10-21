@@ -40,7 +40,7 @@ printf '%s\n' '<token>' | ./dist/dormwatt client config set-token
 ./dist/dormwatt client serve --open
 ```
 
-浏览器会自动打开 `http://127.0.0.1:20532/`.
+浏览器会自动打开本地 Web.
 
 ## 构建
 

@@ -76,11 +76,13 @@
 
 ## 3. 服务端配置
 
+默认端口只在本节维护, 其他文档使用 `<server_port>` 与 `<local_port>` 占位符.
+
 ```toml
 version = 1
 
 [server]
-bind = "127.0.0.1:20531"
+bind = "127.0.0.1:20006"
 allow_insecure_http = false
 max_body_bytes = 65536
 read_header_timeout = "10s"
@@ -169,7 +171,7 @@ token = "dw_..."
 request_timeout = "20s"
 
 [local]
-bind = "127.0.0.1:20532"
+bind = "127.0.0.1:20007"
 allow_remote = false
 open_browser = true
 # auto: 有桌面会话时启用托盘; on: 强制启用; off: 关闭.

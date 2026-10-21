@@ -13,7 +13,7 @@
 默认:
 
 ```
-http://127.0.0.1:20532/
+http://127.0.0.1:<local_port>/
   /                  Web GUI
   /assets/*          构建产物
   /api/*             本地 API
@@ -194,7 +194,7 @@ Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'
     "request_timeout": "20s"
   },
   "local": {
-    "bind": "127.0.0.1:20532",
+    "bind": "127.0.0.1:<local_port>",
     "allow_remote": false,
     "tray": "auto"
   },

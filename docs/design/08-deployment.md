@@ -49,6 +49,8 @@ dormwatt client --help
 
 ## 2. 服务端初始化
 
+默认端口只在 [04-data-model.md](04-data-model.md) 维护. 下文用 `<server_port>` 表示服务端监听端口, 用 `<local_port>` 表示客户端本地 Web 端口.
+
 ### 2.1 创建配置
 
 ```shell
@@ -59,7 +61,6 @@ sudo -u dormwatt tee /etc/dormwatt/server.toml <<'EOF'
 version = 1
 
 [server]
-bind = "127.0.0.1:20531"
 allow_insecure_http = false
 
 [auth]
@@ -117,18 +118,18 @@ sudo -u dormwatt dormwatt server run --config /etc/dormwatt/server.toml
 启动日志应包含:
 
 ```
-bind=127.0.0.1:20531
+bind=127.0.0.1:<server_port>
 database=/var/lib/dormwatt/dormwatt.db
 ```
 
 ### 2.4 验证
 
 ```shell
-curl -sS http://127.0.0.1:20531/v1/health
+curl -sS http://127.0.0.1:<server_port>/v1/health
 
 curl -sS \
   -H "Authorization: Bearer $TOKEN" \
-  http://127.0.0.1:20531/v1/status
+  http://127.0.0.1:<server_port>/v1/status
 ```
 
 ## 3. 子路径挂载
@@ -159,7 +160,7 @@ example.com {
     encode gzip
 
     handle_path /dormwatt/api/* {
-        reverse_proxy 127.0.0.1:20531
+        reverse_proxy 127.0.0.1:<server_port>
     }
 
     handle {
@@ -176,7 +177,7 @@ example.com {
 - 如果未来启用 SSE, 在 `reverse_proxy` 中关闭缓冲:
 
 ```
-reverse_proxy 127.0.0.1:20531 {
+reverse_proxy 127.0.0.1:<server_port> {
     flush_interval -1
 }
 ```
@@ -195,7 +196,7 @@ server {
 
     location /dormwatt/api/ {
         # 末尾斜杠必须保留: 把 /dormwatt/api/v1/... 改成 /v1/...
-        proxy_pass http://127.0.0.1:20531/;
+        proxy_pass http://127.0.0.1:<server_port>/;
 
         proxy_http_version 1.1;
         proxy_set_header Host              $host;
@@ -231,7 +232,7 @@ server {
 - [ ] 代理允许 `PUT` 与 `DELETE` 方法.
 - [ ] 请求体上限不小于 64 KiB.
 - [ ] 超时时间大于服务端的 60 秒写超时.
-- [ ] 直接访问 `http://127.0.0.1:20531/v1/health` 返回 200.
+- [ ] 直接访问 `http://127.0.0.1:<server_port>/v1/health` 返回 200.
 - [ ] 外部访问 `https://example.com/dormwatt/api/v1/health` 返回 200.
 
 ### 3.5 客户端拼接
@@ -359,7 +360,7 @@ FROM gcr.io/distroless/static-debian12
 COPY --from=build /out/dormwatt /usr/local/bin/dormwatt
 USER nonroot:nonroot
 VOLUME ["/data"]
-EXPOSE 20531
+EXPOSE <server_port>
 ENTRYPOINT ["/usr/local/bin/dormwatt", "server", "run", "--config", "/data/server.toml"]
 ```
 
@@ -368,7 +369,7 @@ ENTRYPOINT ["/usr/local/bin/dormwatt", "server", "run", "--config", "/data/serve
 ```shell
 docker run -d \
   --name dormwatt \
-  -p 127.0.0.1:20531:20531 \
+  -p 127.0.0.1:<server_port>:<server_port> \
   -v dormwatt-data:/data \
   -v "$PWD/server.toml:/data/server.toml:ro" \
   dormwatt:latest
@@ -376,7 +377,7 @@ docker run -d \
 
 注意:
 
-- 容器内 `bind` 使用 `0.0.0.0:20531` 才能被宿主访问, 此时需要 `allow_insecure_http = true` 或挂载证书.
+- 容器内 `bind` 使用 `0.0.0.0:<server_port>` 才能被宿主访问, 此时需要 `allow_insecure_http = true` 或挂载证书.
 - 更推荐让容器只暴露到宿主回环, 由宿主反向代理终止 TLS.
 - 创建 token:
 
@@ -404,7 +405,7 @@ dormwatt client serve --open
 
 - 守护进程前台运行, 关闭终端即停止.
 - 桌面环境会自动显示托盘图标, 可用 `--tray=on` 或 `--no-tray` 覆盖.
-- 浏览器打开 `http://127.0.0.1:20532/`.
+- 浏览器打开 `http://127.0.0.1:<local_port>/`.
 - 设置页填入服务端地址与 token, 或提前用 CLI 配置好.
 - 托盘菜单可以打开页面, 立即刷新, 查看登录帮助与退出.
 

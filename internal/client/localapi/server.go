@@ -1,7 +1,7 @@
 // Package localapi 实现 dormwatt client serve 的本地 HTTP 服务.
 //
 // 它托管 Web 静态资源, 代理远端 /v1 API, 并提供本地状态与设置接口.
-// 监听地址默认是 127.0.0.1:20532.
+// 监听地址默认是 127.0.0.1:20007.
 package localapi
 
 import (
@@ -27,7 +27,7 @@ import (
 
 const (
 	// DefaultBind 是默认监听地址.
-	DefaultBind = "127.0.0.1:20532"
+	DefaultBind = "127.0.0.1:20007"
 	// shutdownDelay 让 shutdown 响应先完成写出.
 	shutdownDelay = 100 * time.Millisecond
 )

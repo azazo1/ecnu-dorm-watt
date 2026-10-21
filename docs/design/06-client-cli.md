@@ -95,7 +95,7 @@ config:      /Users/alice/.config/dormwatt/client.toml
 server:      https://example.com/dormwatt/api
 token:       dw_7Q3k... (set)
 timezone:    Asia/Shanghai
-local bind:  127.0.0.1:20532
+local bind:  127.0.0.1:<local_port>
 threshold:   10.00
 ```
 
@@ -382,7 +382,7 @@ dormwatt client archive delete 202601 --room 2
 ```shell
 dormwatt client serve
 dormwatt client serve --open
-dormwatt client serve --port 20532
+dormwatt client serve --port <local_port>
 dormwatt client serve --no-tray
 dormwatt client serve --tray=on
 ```
@@ -399,7 +399,7 @@ dormwatt client serve --tray=on
 行为:
 
 - 检查 `runtime.json`, 如果已有存活实例则报错并输出 PID.
-- 绑定 `client.toml` 中的 `local.bind`, 默认 `127.0.0.1:20532`.
+- 绑定 `client.toml` 中的 `local.bind`, 默认 `127.0.0.1:<local_port>`.
 - 生成本地 token, 写入 `runtime.json`, 权限 0600.
 - 托管 Web 静态资源, 提供本地 API.
 - 启动后台状态轮询.

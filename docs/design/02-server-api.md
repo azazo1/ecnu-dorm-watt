@@ -16,7 +16,7 @@
 
 ```
 公网 URL:   https://example.com/dormwatt/api/v1/records
-代理转发:   http://127.0.0.1:20531/v1/records
+代理转发:   http://127.0.0.1:<server_port>/v1/records
 ```
 
 客户端 `server.base_url` 仍然填写公网入口 `https://example.com/dormwatt/api`, 拼接后得到上面的公网 URL.

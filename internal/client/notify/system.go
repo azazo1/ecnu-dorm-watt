@@ -38,7 +38,7 @@ func New(webURL string) (*System, error) {
 // Notify 发送一条桌面通知. 点击通知会尝试打开本地 Web.
 func (s *System) Notify(title, body string) error {
 	if s.URL == "" {
-		s.URL = "http://127.0.0.1:20532/"
+		s.URL = "http://127.0.0.1:20007/"
 	}
 	switch runtime.GOOS {
 	case "darwin":

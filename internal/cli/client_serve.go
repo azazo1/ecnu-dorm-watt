@@ -200,7 +200,7 @@ func desktopSession() bool {
 func localURL(bind string) string {
 	host, port, err := net.SplitHostPort(bind)
 	if err != nil {
-		return "http://127.0.0.1:20532/"
+		return "http://127.0.0.1:20007/"
 	}
 	if host == "" || host == "0.0.0.0" || host == "::" {
 		host = "127.0.0.1"

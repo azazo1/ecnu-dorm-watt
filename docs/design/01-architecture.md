@@ -20,7 +20,7 @@
 +--------------------------+--------------------------+
 |                  dormwatt server                    |
 |  monitor loop -> ECNU client -> store (SQLite)       |
-|  HTTP API (/dormwatt/api/v1/...) + token auth        |
+|  HTTP API (/v1/...) + token auth                     |
 +--------------------------+--------------------------+
                            ^
                            | HTTPS + Bearer token
@@ -29,7 +29,7 @@
    dormwatt client CLI          dormwatt client serve
    (短生命周期, 直连)            (本地守护进程 + 托盘)
              |                           |
-             |                 127.0.0.1:20532
+             |                 <local_port>
              |                           |
              |                    浏览器 Web GUI
              |                  (同源, 本地 Cookie)
