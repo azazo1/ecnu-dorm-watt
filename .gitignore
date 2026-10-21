@@ -1,0 +1,16 @@
+.DS_Store
+.tmp/
+.agents/
+dist/
+bin/
+coverage.out
+*.log
+*.db
+*.db-wal
+*.db-shm
+secrets/
+web/node_modules/
+web/dist/
+dormwatt
+dormwatt-notray
+dormwatt-tray.exe
