@@ -106,31 +106,28 @@ func doRequest(t *testing.T, ts *httptest.Server, method, path string, body any,
 	return resp, data
 }
 
-func TestServerBasePathAndAuth(t *testing.T) {
+func TestServerAuth(t *testing.T) {
 	ts, db := newTestServer(t)
 
-	resp, _ := doRequest(t, ts, http.MethodGet, "/dormwatt/api/v1/health", nil, "")
+	resp, _ := doRequest(t, ts, http.MethodGet, "/v1/health", nil, "")
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("health status = %d", resp.StatusCode)
 	}
-	resp, _ = doRequest(t, ts, http.MethodGet, "/v1/health", nil, "")
+	resp, _ = doRequest(t, ts, http.MethodGet, "/dormwatt/api/v1/health", nil, "")
 	if resp.StatusCode != http.StatusNotFound {
-		t.Fatalf("root path status = %d, want 404", resp.StatusCode)
+		t.Fatalf("old prefix status = %d, want 404", resp.StatusCode)
 	}
-	resp, _ = doRequest(t, ts, http.MethodGet, "/dormwatt/api/v1/status", nil, "")
+	resp, _ = doRequest(t, ts, http.MethodGet, "/v1/status", nil, "")
 	if resp.StatusCode != http.StatusUnauthorized {
 		t.Fatalf("status without token = %d, want 401", resp.StatusCode)
 	}
-	resp, body := doRequest(t, ts, http.MethodGet, "/dormwatt/api/v1/status", nil, "dw_testtoken")
+	resp, body := doRequest(t, ts, http.MethodGet, "/v1/status", nil, "dw_testtoken")
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("status = %d body=%s", resp.StatusCode, body)
 	}
 	var status protocol.Status
 	if err := json.Unmarshal(body, &status); err != nil {
 		t.Fatal(err)
-	}
-	if status.BasePath != "/dormwatt/api" {
-		t.Fatalf("base path = %q", status.BasePath)
 	}
 
 	room, _, err := db.EnsureRoom(context.Background(), "4408_MH_83_257", 102, "new-83_MH", time.Now())
@@ -143,7 +140,7 @@ func TestServerBasePathAndAuth(t *testing.T) {
 	if _, err := db.InsertSample(context.Background(), room.ID, time.Date(2026, 1, 24, 14, 35, 32, 0, time.FixedZone("CST", 8*3600)), 33.43); err != nil {
 		t.Fatal(err)
 	}
-	resp, body = doRequest(t, ts, http.MethodGet, "/dormwatt/api/v1/records", nil, "dw_testtoken")
+	resp, body = doRequest(t, ts, http.MethodGet, "/v1/records", nil, "dw_testtoken")
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("records = %d body=%s", resp.StatusCode, body)
 	}
@@ -156,15 +153,15 @@ func TestServerBasePathAndAuth(t *testing.T) {
 	}
 
 	archiveBody := map[string]any{"name": "test-archive"}
-	resp, body = doRequest(t, ts, http.MethodPost, "/dormwatt/api/v1/archives", archiveBody, "dw_testtoken")
+	resp, body = doRequest(t, ts, http.MethodPost, "/v1/archives", archiveBody, "dw_testtoken")
 	if resp.StatusCode != http.StatusCreated {
 		t.Fatalf("create archive = %d body=%s", resp.StatusCode, body)
 	}
-	resp, body = doRequest(t, ts, http.MethodGet, "/dormwatt/api/v1/archives", nil, "dw_testtoken")
+	resp, body = doRequest(t, ts, http.MethodGet, "/v1/archives", nil, "dw_testtoken")
 	if resp.StatusCode != http.StatusOK || !strings.Contains(string(body), "test-archive") {
 		t.Fatalf("list archives = %d body=%s", resp.StatusCode, body)
 	}
-	resp, body = doRequest(t, ts, http.MethodGet, "/dormwatt/api/v1/archives/test-archive", nil, "dw_testtoken")
+	resp, body = doRequest(t, ts, http.MethodGet, "/v1/archives/test-archive", nil, "dw_testtoken")
 	if resp.StatusCode != http.StatusOK || !strings.Contains(string(body), "33.43") {
 		t.Fatalf("download archive = %d body=%s", resp.StatusCode, body)
 	}

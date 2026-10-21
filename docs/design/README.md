@@ -42,7 +42,7 @@ DormWatt 是 ECNU 宿舍电量查询与监控工具. 本项目把原有 Rust + T
 | 交付形态 | 单二进制 `dormwatt` + 子命令 `server` / `client` | 减少安装步骤, 共享配置与日志代码 |
 | 服务端鉴权 | 不透明 Bearer Token, 配置只存 SHA-256 | 可撤销, 可分级, 不依赖证书分发 |
 | 传输安全 | 反向代理终止 TLS, 或服务端配置证书 | 兼容子路径部署, 不引入 mTLS |
-| 子路径 | `server.base_path` 可配置, 路由全部相对挂载 | 适配 `https://example.com/dormwatt/api` |
+| 子路径 | 反向代理剥离外部前缀, 服务端固定 `/v1` | 适配 `https://example.com/dormwatt/api` |
 | 存储 | SQLite, WAL 模式, 纯 Go 驱动 | 归档操作可事务化, 查询与统计方便 |
 | 时间 | 存储 UTC 毫秒, 展示时按配置时区 | 避免夏令时与时区歧义 |
 | 房间 | 多房间表 + 一个 active room | 切房间不丢历史, 与旧目录结构对齐 |
@@ -58,7 +58,7 @@ DormWatt 是 ECNU 宿舍电量查询与监控工具. 本项目把原有 Rust + T
 - 活动房间 active room: 采集循环当前查询的房间. 同一时刻最多一个.
 - 会话 session: 从 ECNU 获取的 `JSESSIONID`, `cookie`, `X-CSRF-TOKEN` 三元组. 只在服务端内存或受限文件中保存.
 - 归档 archive: 从活动样本流中切出的一段时间, 移入归档表, 可按名称下载为 CSV.
-- 子路径 base path: 服务端在公网 URL 上的挂载前缀, 例如 `/dormwatt/api`.
+- 子路径挂载: 服务端固定 `/v1/...`, 外部 `/dormwatt/api` 由反向代理剥离.
 - 本地守护进程 local daemon: `dormwatt client serve` 启动的进程, 监听回环地址, 托管 Web GUI, 并在桌面环境显示托盘图标.
 
 ## 文档状态

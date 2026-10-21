@@ -106,7 +106,7 @@ func (s *Server) routes() http.Handler {
 		routeDef{method: http.MethodDelete, handler: http.HandlerFunc(s.handleDeleteArchive), scope: scopeWrite},
 	)
 
-	// 前缀内部未匹配的路径统一返回 problem 格式的 404.
+	// 未匹配的 /v1 路径统一返回 problem 格式的 404.
 	mux.Handle("/v1/", http.HandlerFunc(s.handleNotFound))
 	mux.Handle("/v1", http.HandlerFunc(s.handleNotFound))
 

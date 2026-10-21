@@ -39,7 +39,7 @@ func TestRecords(t *testing.T) {
 	query := url.Values{}
 	query.Set("from", base.Add(30*time.Minute).Format(time.RFC3339))
 	query.Set("to", base.Add(90*time.Minute).Format(time.RFC3339))
-	rec := doRequest(t, srv, http.MethodGet, testBasePath+"/v1/records?"+query.Encode(), token, "", nil)
+	rec := doRequest(t, srv, http.MethodGet, "/v1/records?"+query.Encode(), token, "", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("状态码 = %d, body=%s", rec.Code, rec.Body.String())
 	}
@@ -60,7 +60,7 @@ func TestRecords(t *testing.T) {
 		t.Fatalf("电量 = %v", records.Records[0].Degree)
 	}
 
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/records", token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/records", token, "", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("无参数查询状态码 = %d", rec.Code)
 	}
@@ -79,7 +79,7 @@ func TestRecords(t *testing.T) {
 		t.Fatal("未提供时间范围时应为 null")
 	}
 
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/records?limit=2", token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/records?limit=2", token, "", nil)
 	if rec.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("超限状态码 = %d, 期望 422", rec.Code)
 	}
@@ -87,7 +87,7 @@ func TestRecords(t *testing.T) {
 		t.Fatalf("超限 code = %q", code)
 	}
 
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/records?from=2026-01-01T10:00:00", token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/records?from=2026-01-01T10:00:00", token, "", nil)
 	if rec.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("缺少时区偏移状态码 = %d, 期望 422", rec.Code)
 	}
@@ -98,7 +98,7 @@ func TestRecords(t *testing.T) {
 	csvQuery := url.Values{}
 	csvQuery.Set("format", "csv")
 	csvQuery.Set("header", "true")
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/records?"+csvQuery.Encode(), token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/records?"+csvQuery.Encode(), token, "", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("CSV 状态码 = %d", rec.Code)
 	}
@@ -116,7 +116,7 @@ func TestRecords(t *testing.T) {
 		t.Fatalf("首行 CSV = %q", lines[1])
 	}
 
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/records?room_id=999", token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/records?room_id=999", token, "", nil)
 	if rec.Code != http.StatusNotFound {
 		t.Fatalf("未知房间状态码 = %d, 期望 404", rec.Code)
 	}
@@ -146,7 +146,7 @@ func TestStatus(t *testing.T) {
 	}
 	token := db.addToken("reader", "read")
 
-	rec := doRequest(t, srv, http.MethodGet, testBasePath+"/v1/status", token, "", nil)
+	rec := doRequest(t, srv, http.MethodGet, "/v1/status", token, "", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("状态码 = %d, body=%s", rec.Code, rec.Body.String())
 	}
@@ -154,7 +154,7 @@ func TestStatus(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &status); err != nil {
 		t.Fatalf("解析 status 失败: %v", err)
 	}
-	if status.Version != "test" || status.BasePath != testBasePath {
+	if status.Version != "test" {
 		t.Fatalf("status 基础字段 = %+v", status)
 	}
 	if status.UptimeSecond < 0 {
@@ -195,7 +195,7 @@ func TestDegree(t *testing.T) {
 	})
 	token := db.addToken("reader", "read")
 
-	rec := doRequest(t, srv, http.MethodGet, testBasePath+"/v1/degree", token, "", nil)
+	rec := doRequest(t, srv, http.MethodGet, "/v1/degree", token, "", nil)
 	if rec.Code != http.StatusConflict {
 		t.Fatalf("无活动房间状态码 = %d, 期望 409", rec.Code)
 	}
@@ -205,7 +205,7 @@ func TestDegree(t *testing.T) {
 
 	room := db.addRoom("4408_MH_83_257", 102, "new-83_MH", now)
 	db.activeID = room.ID
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/degree", token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/degree", token, "", nil)
 	if rec.Code != http.StatusBadGateway {
 		t.Fatalf("无会话状态码 = %d, 期望 502", rec.Code)
 	}
@@ -216,7 +216,7 @@ func TestDegree(t *testing.T) {
 	if err := db.SaveSession(t.Context(), store.Session{JSESSIONID: "x", State: "ok", UpdatedAt: now}); err != nil {
 		t.Fatalf("保存会话失败: %v", err)
 	}
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/degree", token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/degree", token, "", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("状态码 = %d, body=%s", rec.Code, rec.Body.String())
 	}
@@ -231,7 +231,7 @@ func TestDegree(t *testing.T) {
 		t.Fatalf("首次查询应写缓存, calls=%d", degree.calls)
 	}
 
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/degree", token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/degree", token, "", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("缓存命中状态码 = %d", rec.Code)
 	}
@@ -242,7 +242,7 @@ func TestDegree(t *testing.T) {
 		t.Fatalf("缓存命中响应 = %+v, calls=%d", result, degree.calls)
 	}
 
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/degree?fresh=true", token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/degree?fresh=true", token, "", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("fresh 查询状态码 = %d", rec.Code)
 	}
@@ -254,7 +254,7 @@ func TestDegree(t *testing.T) {
 	}
 
 	degree.err = &fakeCodedError{code: protocol.CodeECNUNotLoggedIn}
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/degree?fresh=true", token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/degree?fresh=true", token, "", nil)
 	if rec.Code != http.StatusBadGateway {
 		t.Fatalf("上游失败状态码 = %d, 期望 502", rec.Code)
 	}
@@ -270,13 +270,13 @@ func TestRooms(t *testing.T) {
 	})
 	token := db.addToken("writer", "read", "write")
 
-	rec := doRequest(t, srv, http.MethodPost, testBasePath+"/v1/rooms", token,
+	rec := doRequest(t, srv, http.MethodPost, "/v1/rooms", token,
 		`{"room_no":"a/b","elcarea":102,"elcbuis":"new-83_MH"}`, nil)
 	if rec.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("非法 room_no 状态码 = %d, 期望 422", rec.Code)
 	}
 
-	rec = doRequest(t, srv, http.MethodPost, testBasePath+"/v1/rooms", token,
+	rec = doRequest(t, srv, http.MethodPost, "/v1/rooms", token,
 		`{"room_no":"4408_MH_83_257","elcarea":102,"elcbuis":"new-83_MH"}`, nil)
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("新建房间状态码 = %d, body=%s", rec.Code, rec.Body.String())
@@ -285,13 +285,13 @@ func TestRooms(t *testing.T) {
 		t.Fatal("切换活动房间应唤醒采集循环")
 	}
 
-	rec = doRequest(t, srv, http.MethodPost, testBasePath+"/v1/rooms", token,
+	rec = doRequest(t, srv, http.MethodPost, "/v1/rooms", token,
 		`{"room_no":"4408_MH_83_257","elcarea":102,"elcbuis":"new-83_MH"}`, nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("复用房间状态码 = %d, 期望 200", rec.Code)
 	}
 
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/rooms/active", token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/rooms/active", token, "", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("活动房间状态码 = %d", rec.Code)
 	}
@@ -303,16 +303,16 @@ func TestRooms(t *testing.T) {
 		t.Fatalf("活动房间 = %+v", active)
 	}
 
-	rec = doRequest(t, srv, http.MethodDelete, testBasePath+"/v1/rooms/active", token, "", nil)
+	rec = doRequest(t, srv, http.MethodDelete, "/v1/rooms/active", token, "", nil)
 	if rec.Code != http.StatusNoContent {
 		t.Fatalf("取消活动房间状态码 = %d", rec.Code)
 	}
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/rooms/active", token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/rooms/active", token, "", nil)
 	if rec.Code != http.StatusConflict {
 		t.Fatalf("无活动房间状态码 = %d, 期望 409", rec.Code)
 	}
 
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/rooms", token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/rooms", token, "", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("房间列表状态码 = %d", rec.Code)
 	}
@@ -342,7 +342,7 @@ func TestArchives(t *testing.T) {
 	}, []store.Sample{{Time: start.Add(-time.Hour), Degree: 31}})
 	token := db.addToken("writer", "read", "write")
 
-	rec := doRequest(t, srv, http.MethodGet, testBasePath+"/v1/archives?room_id=all", token, "", nil)
+	rec := doRequest(t, srv, http.MethodGet, "/v1/archives?room_id=all", token, "", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("归档列表状态码 = %d, body=%s", rec.Code, rec.Body.String())
 	}
@@ -360,7 +360,7 @@ func TestArchives(t *testing.T) {
 		t.Fatalf("归档房间 = %+v", list.Archives)
 	}
 
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/archives", token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/archives", token, "", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("默认房间归档状态码 = %d", rec.Code)
 	}
@@ -375,7 +375,7 @@ func TestArchives(t *testing.T) {
 	db.addSample(roomA.ID, start.Add(24*time.Hour), 28.5)
 	db.addSample(roomA.ID, start.Add(25*time.Hour), 28)
 	body := `{"from":"2026-01-02T00:00:00+08:00","to":"2026-01-02T23:59:59+08:00","name":"c-range"}`
-	rec = doRequest(t, srv, http.MethodPost, testBasePath+"/v1/archives", token, body, nil)
+	rec = doRequest(t, srv, http.MethodPost, "/v1/archives", token, body, nil)
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("创建归档状态码 = %d, body=%s", rec.Code, rec.Body.String())
 	}
@@ -387,7 +387,7 @@ func TestArchives(t *testing.T) {
 		t.Fatalf("创建的归档 = %+v", created)
 	}
 
-	rec = doRequest(t, srv, http.MethodPost, testBasePath+"/v1/archives", token, body, nil)
+	rec = doRequest(t, srv, http.MethodPost, "/v1/archives", token, body, nil)
 	if rec.Code != http.StatusConflict {
 		t.Fatalf("重名归档状态码 = %d, 期望 409", rec.Code)
 	}
@@ -395,7 +395,7 @@ func TestArchives(t *testing.T) {
 		t.Fatalf("重名归档 code = %q", code)
 	}
 
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/archives/c-range", token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/archives/c-range", token, "", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("下载归档状态码 = %d, body=%s", rec.Code, rec.Body.String())
 	}
@@ -406,11 +406,11 @@ func TestArchives(t *testing.T) {
 		t.Fatalf("归档 CSV 行数 = %d, body=%q", len(rows), rec.Body.String())
 	}
 
-	rec = doRequest(t, srv, http.MethodDelete, testBasePath+"/v1/archives/c-range", token, "", nil)
+	rec = doRequest(t, srv, http.MethodDelete, "/v1/archives/c-range", token, "", nil)
 	if rec.Code != http.StatusNoContent {
 		t.Fatalf("删除归档状态码 = %d", rec.Code)
 	}
-	rec = doRequest(t, srv, http.MethodDelete, testBasePath+"/v1/archives/c-range", token, "", nil)
+	rec = doRequest(t, srv, http.MethodDelete, "/v1/archives/c-range", token, "", nil)
 	if rec.Code != http.StatusNotFound {
 		t.Fatalf("重复删除状态码 = %d, 期望 404", rec.Code)
 	}
@@ -419,7 +419,7 @@ func TestArchives(t *testing.T) {
 func TestMethodNotAllowed(t *testing.T) {
 	srv, db := newTestServer(t, nil)
 	token := db.addToken("reader", "read")
-	rec := doRequest(t, srv, http.MethodPost, testBasePath+"/v1/status", token, "", nil)
+	rec := doRequest(t, srv, http.MethodPost, "/v1/status", token, "", nil)
 	if rec.Code != http.StatusMethodNotAllowed {
 		t.Fatalf("状态码 = %d, 期望 405", rec.Code)
 	}
@@ -475,7 +475,7 @@ func TestCatalog(t *testing.T) {
 	loc := testLocation(t)
 	room := db.addRoom("4408_MH_83_257", 102, "new-83_MH", time.Date(2026, 1, 1, 0, 0, 0, 0, loc))
 
-	rec := doRequest(t, srv, http.MethodGet, testBasePath+"/v1/ecnu/districts", token, "", nil)
+	rec := doRequest(t, srv, http.MethodGet, "/v1/ecnu/districts", token, "", nil)
 	if rec.Code != http.StatusBadGateway {
 		t.Fatalf("无会话状态码 = %d, 期望 502", rec.Code)
 	}
@@ -484,10 +484,10 @@ func TestCatalog(t *testing.T) {
 	}
 
 	body := `{"jsession_id":"a","cookie":"b","x_csrf_token":"c"}`
-	if rec := doRequest(t, srv, http.MethodPut, testBasePath+"/v1/session", token, body, nil); rec.Code != http.StatusNoContent {
+	if rec := doRequest(t, srv, http.MethodPut, "/v1/session", token, body, nil); rec.Code != http.StatusNoContent {
 		t.Fatalf("上传会话状态码 = %d", rec.Code)
 	}
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/ecnu/districts", token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/ecnu/districts", token, "", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("目录状态码 = %d, body=%s", rec.Code, rec.Body.String())
 	}
@@ -499,12 +499,12 @@ func TestCatalog(t *testing.T) {
 		t.Fatalf("目录数据 = %+v", districts)
 	}
 
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/ecnu/buildings", token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/ecnu/buildings", token, "", nil)
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("缺少参数状态码 = %d, 期望 400", rec.Code)
 	}
 
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/rooms/"+strconv.FormatInt(room.ID, 10)+"/info", token, "", nil)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/rooms/"+strconv.FormatInt(room.ID, 10)+"/info", token, "", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("房间信息状态码 = %d, body=%s", rec.Code, rec.Body.String())
 	}
@@ -521,7 +521,7 @@ func TestPanicRecovered(t *testing.T) {
 	srv, db := newTestServer(t, nil)
 	db.panicOnStats = true
 	token := db.addToken("reader", "read")
-	rec := doRequest(t, srv, http.MethodGet, testBasePath+"/v1/status", token, "", nil)
+	rec := doRequest(t, srv, http.MethodGet, "/v1/status", token, "", nil)
 	if rec.Code != http.StatusInternalServerError {
 		t.Fatalf("panic 后状态码 = %d, 期望 500", rec.Code)
 	}
@@ -542,12 +542,12 @@ func TestGzipOnlyForLargeJSON(t *testing.T) {
 	token := db.addToken("reader", "read")
 	headers := map[string]string{"Accept-Encoding": "gzip"}
 
-	rec := doRequest(t, srv, http.MethodGet, testBasePath+"/v1/health", token, "", headers)
+	rec := doRequest(t, srv, http.MethodGet, "/v1/health", token, "", headers)
 	if got := rec.Header().Get("Content-Encoding"); got != "" {
 		t.Fatalf("小响应不应压缩, Content-Encoding=%q", got)
 	}
 
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/records", token, "", headers)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/records", token, "", headers)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("状态码 = %d", rec.Code)
 	}
@@ -567,7 +567,7 @@ func TestGzipOnlyForLargeJSON(t *testing.T) {
 		t.Fatalf("记录数 = %d, 期望 200", len(records.Records))
 	}
 
-	rec = doRequest(t, srv, http.MethodGet, testBasePath+"/v1/records?format=csv", token, "", headers)
+	rec = doRequest(t, srv, http.MethodGet, "/v1/records?format=csv", token, "", headers)
 	if got := rec.Header().Get("Content-Encoding"); got != "" {
 		t.Fatalf("CSV 不应压缩, Content-Encoding=%q", got)
 	}

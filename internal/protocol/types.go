@@ -89,7 +89,6 @@ type Status struct {
 	Version      string        `json:"version"`
 	ServerTime   time.Time     `json:"server_time"`
 	UptimeSecond int64         `json:"uptime_seconds"`
-	BasePath     string        `json:"base_path"`
 	ActiveRoom   *RoomSummary  `json:"active_room"`
 	Session      SessionInfo   `json:"session"`
 	Monitor      MonitorStatus `json:"monitor"`

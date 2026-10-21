@@ -7,7 +7,6 @@
 ```
 解析 CLI 参数与配置
   -> 初始化日志
-  -> 解析并规范化 base_path
   -> 获取数据目录单实例锁
   -> 打开 SQLite, 执行迁移与 quick_check
   -> 加载活动房间与会话
@@ -272,7 +271,7 @@ dormwatt server purge --deleted-before <RFC3339>
 
 组件划分:
 
-- `startup`: 配置, 目录, 数据库, 监听地址, base_path.
+- `startup`: 配置, 目录, 数据库, 监听地址.
 - `monitor`: 状态转移, 采样, 退避.
 - `ecnu`: 上游请求耗时与错误分类, 不含凭据.
 - `http`: 请求日志.
@@ -310,12 +309,9 @@ dormwatt server purge --deleted-before <RFC3339>
 api := http.NewServeMux()
 api.HandleFunc("GET /v1/health", ...)
 // ...
-
-root := http.NewServeMux()
-root.Handle(basePath+"/", http.StripPrefix(basePath, api))
 ```
 
-- `basePath` 规范化后注册.
+- 服务端只注册 `/v1/...`; 外部前缀由反向代理剥离.
 - 静态文件不提供服务端页面, 服务端只有 API.
 - 不做 CORS.
 - panic 由中间件恢复并返回 500 `internal`, 同时记录堆栈.

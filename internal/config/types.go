@@ -27,8 +27,6 @@ type TLSConfig struct {
 
 type ServerSection struct {
 	Bind              string     `toml:"bind"`
-	BasePath          string     `toml:"base_path"`
-	StrictPath        bool       `toml:"strict_path"`
 	AllowInsecureHTTP bool       `toml:"allow_insecure_http"`
 	MaxBodyBytes      int64      `toml:"max_body_bytes"`
 	ReadHeaderTimeout Duration   `toml:"read_header_timeout"`
@@ -127,8 +125,6 @@ func DefaultServer() ServerConfig {
 		Version: 1,
 		Server: ServerSection{
 			Bind:              "127.0.0.1:20531",
-			BasePath:          "/dormwatt/api",
-			StrictPath:        true,
 			AllowInsecureHTTP: false,
 			MaxBodyBytes:      64 * 1024,
 			ReadHeaderTimeout: Duration(10 * time.Second),

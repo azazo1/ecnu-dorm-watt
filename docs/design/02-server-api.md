@@ -4,25 +4,22 @@
 
 ## 1. 通用约定
 
-### 1.1 挂载前缀
+### 1.1 路由前缀
 
-- 配置项 `server.base_path` 指定公网挂载前缀, 例如 `/dormwatt/api`.
-- 所有 API 路由形如 `{base_path}/v1/...`.
-- `base_path` 规则:
-  - 必须以 `/` 开头, 不允许以 `/` 结尾, 不允许空段, `.` 或 `..`.
-  - 默认值 `/dormwatt/api`.
-  - 允许为 `/` 表示挂在域名根, 此时路由为 `/v1/...`.
+- 服务端只注册 `/v1/...`, 不读取外部挂载前缀.
+- 需要挂到 `/dormwatt/api` 时, 由反向代理剥掉该前缀再转发.
 - 服务端不使用绝对 URL 重定向, 响应中不出现依赖域名的主机名.
-- 请求路径不在 `base_path` 之下时返回 404, 不泄露其他路由.
-- 反向代理必须保留完整路径转发, 不能去掉前缀. 具体示例见 [08-deployment.md](08-deployment.md).
+- `/v1` 之外的请求, 以及包含重复斜杠, 末尾斜杠, `.` 或 `..` 的请求统一返回 404.
+- 反向代理负责把外部前缀映射到后端 `/v1/...`. 具体示例见 [08-deployment.md](08-deployment.md).
 
 示例:
 
 ```
 公网 URL:   https://example.com/dormwatt/api/v1/records
-配置:       base_path = "/dormwatt/api"
-内部路由:   /v1/records
+代理转发:   http://127.0.0.1:20531/v1/records
 ```
+
+客户端 `server.base_url` 仍然填写公网入口 `https://example.com/dormwatt/api`, 拼接后得到上面的公网 URL.
 
 ### 1.2 客户端基址拼接规则
 
@@ -211,7 +208,6 @@
   "version": "0.1.0",
   "server_time": "2026-01-24T14:35:32+08:00",
   "uptime_seconds": 3600,
-  "base_path": "/dormwatt/api",
   "active_room": {
     "id": 1,
     "room_no": "4408_MH_83_257",
@@ -661,7 +657,7 @@ JSON 响应:
 
 ## 11. 与旧接口的差异摘要
 
-- 路径全部加 `{base_path}/v1` 前缀, 不再假设域名根.
+- 路径统一为 `/v1/...`; 外部子路径由反向代理挂载并剥离.
 - 成功响应不再有 `{"Ok":...}` 包裹.
 - 错误不再用 `200 + {"Err":...}`, 改为 HTTP 状态码与 problem+json.
 - `POST /post-cookies` 改为 `PUT /v1/session`, `POST /clear-cookies` 改为 `DELETE /v1/session`.

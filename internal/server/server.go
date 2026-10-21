@@ -67,7 +67,7 @@ type CodedError interface {
 type Deps struct {
 	// DB 是存储层, 必须非空.
 	DB store.DB
-	// Config 是服务端配置, 其中 BasePath 会被规范化.
+	// Config 是服务端配置.
 	Config config.ServerConfig
 	// Logger 是日志器, 为空时使用 slog.Default.
 	Logger *slog.Logger
@@ -94,9 +94,6 @@ type Server struct {
 	startedAt time.Time
 	loc       *time.Location
 
-	basePath  string
-	baseValid bool
-
 	degree  DegreeSource
 	catalog CatalogSource
 	monitor MonitorState
@@ -121,9 +118,6 @@ type Server struct {
 }
 
 // New 构造 Server 并完成路由挂载.
-//
-// 配置中的 base_path 非法时, 所有请求都会得到 404, 以此避免把 API 暴露到
-// 意外的前缀上; 该错误会写入日志.
 func New(deps Deps) *Server {
 	logger := deps.Logger
 	if logger == nil {
@@ -158,22 +152,13 @@ func New(deps Deps) *Server {
 		live:         newLiveQuery(),
 		liveTTL:      liveQueryTTL(cfg.ECNU.LiveQueryCache.Std()),
 	}
-	s.basePath, s.baseValid = normalizeMountPath(cfg.Server.BasePath, logger)
 	s.handler = s.buildHandler()
 	return s
 }
 
-// Handler 返回挂载好 base_path 的 HTTP 处理器.
+// Handler 返回 HTTP 处理器.
 func (s *Server) Handler() http.Handler {
 	return s.handler
-}
-
-// BasePath 返回规范化后的挂载前缀.
-func (s *Server) BasePath() string {
-	if !s.baseValid {
-		return ""
-	}
-	return s.basePath
 }
 
 // MarkShuttingDown 标记服务正在关闭, 之后 /v1/health 返回 503.
@@ -194,49 +179,20 @@ func (s *Server) buildHandler() http.Handler {
 	return h
 }
 
-// apiHandler 剥离挂载前缀后交给内部路由.
+// apiHandler 只接受 /v1 路由, 并拒绝需要路径规范化的请求.
 func (s *Server) apiHandler() http.Handler {
 	mux := s.routes()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		trimmed, ok := s.trimBasePath(r.URL.Path)
-		if !ok {
+		if r.URL.Path != "/v1" && !strings.HasPrefix(r.URL.Path, "/v1/") {
 			s.handleNotFound(w, r)
 			return
 		}
-		// 复用原请求, 只把路径换成去掉前缀后的内部路径.
-		r2 := r.Clone(r.Context())
-		u := *r.URL
-		u.Path = trimmed
-		u.RawPath = ""
-		r2.URL = &u
-		mux.ServeHTTP(w, r2)
-	})
-}
-
-// trimBasePath 去掉挂载前缀, 返回内部路径.
-//
-// 前缀之外, 非 /v1 路径, 以及需要路径规范化的请求 (重复斜杠, 末尾斜杠, . 与 ..)
-// 都返回 ok=false, 由调用方给出 404, 避免使用重定向.
-func (s *Server) trimBasePath(p string) (string, bool) {
-	if !s.baseValid {
-		return "", false
-	}
-	var rest string
-	if s.basePath == "/" {
-		rest = p
-	} else {
-		if !strings.HasPrefix(p, s.basePath+"/") {
-			return "", false
+		if path.Clean(r.URL.Path) != r.URL.Path {
+			s.handleNotFound(w, r)
+			return
 		}
-		rest = strings.TrimPrefix(p, s.basePath)
-	}
-	if rest != "/v1" && !strings.HasPrefix(rest, "/v1/") {
-		return "", false
-	}
-	if path.Clean(rest) != rest {
-		return "", false
-	}
-	return rest, true
+		mux.ServeHTTP(w, r)
+	})
 }
 
 // handleNotFound 写出统一的 404 problem.
@@ -257,16 +213,6 @@ func loadLocation(name string, logger *slog.Logger) *time.Location {
 		logger.Warn("无法加载时区", "timezone", candidate, "error", err)
 	}
 	return time.Local
-}
-
-// normalizeMountPath 规范化 base_path, 失败时返回不可用的标记.
-func normalizeMountPath(raw string, logger *slog.Logger) (string, bool) {
-	p, err := config.NormalizeBasePath(raw)
-	if err != nil {
-		logger.Error("server.base_path 非法, 所有请求都将返回 404", "base_path", raw, "error", err)
-		return "", false
-	}
-	return p, true
 }
 
 // exportTime 把时间转换到展示时区并截断到秒.

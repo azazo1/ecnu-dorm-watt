@@ -148,7 +148,6 @@ Content-Type: application/problem+json
 ```toml
 [server]
 bind = "127.0.0.1:20531"
-base_path = "/dormwatt/api"
 
 # 允许在非回环地址上使用明文 HTTP. 默认 false.
 allow_insecure_http = false
@@ -173,7 +172,7 @@ trusted_proxies = ["127.0.0.1/32", "::1/128"]
 ### 3.3 转发头
 
 - 仅当对端地址命中 `trusted_proxies` 时, 采信 `X-Forwarded-For` 与 `X-Forwarded-Proto`.
-- `X-Forwarded-Prefix` 不参与路由, 也不参与生成响应链接. 前缀由 `base_path` 决定.
+- `X-Forwarded-Prefix` 不参与路由, 也不参与生成响应链接. 外部挂载前缀由反向代理决定, 服务端只识别 `/v1/...`.
 - 转发头只用于日志记录与速率限制的客户端识别, 不用于鉴权判断.
 - 多级代理时从右向左取第一个不可信地址.
 

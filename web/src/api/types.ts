@@ -64,7 +64,6 @@ export interface RemoteStatus {
   version: string
   server_time: string
   uptime_seconds: number
-  base_path?: string
   active_room: RoomBrief | null
   session: SessionInfo
   monitor: MonitorStatus

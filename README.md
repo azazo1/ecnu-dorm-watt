@@ -24,7 +24,7 @@ just build-server
 # 第一次运行会生成默认配置与数据库, 然后创建 token
 ./dist/dormwatt-server server token create --name laptop --scope read,write
 
-# 按需编辑配置中的 base_path 与 bind, 然后启动
+# 按需编辑配置中的 bind, 然后启动
 ./dist/dormwatt-server server run
 ```
 

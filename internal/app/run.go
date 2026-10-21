@@ -143,7 +143,6 @@ func RunServer(opts ServerOptions) error {
 	go func() {
 		logger.Info("服务端启动",
 			"bind", cfg.Server.Bind,
-			"base_path", api.BasePath(),
 			"version", ver,
 			"commit", commit,
 			"database", dbPath,

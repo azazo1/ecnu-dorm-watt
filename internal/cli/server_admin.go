@@ -67,7 +67,7 @@ func (a *App) newServerCheckCommand() *cobra.Command {
 }
 
 func (a *App) runServerCheck() error {
-	cfg, db, err := a.openServerDB(context.Background())
+	_, db, err := a.openServerDB(context.Background())
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,6 @@ func (a *App) runServerCheck() error {
 	if a.opts.json {
 		return a.printJSON(map[string]any{
 			"config":      a.opts.configPath,
-			"base_path":   cfg.Server.BasePath,
 			"rooms":       len(rooms),
 			"tokens":      len(tokens),
 			"samples":     stats.Samples,
@@ -106,7 +105,6 @@ func (a *App) runServerCheck() error {
 	}
 	pairs := [][2]string{
 		{"配置", a.opts.configPath},
-		{"挂载前缀", cfg.Server.BasePath},
 		{"房间数", fmt.Sprintf("%d", len(rooms))},
 		{"活动房间", activeText},
 		{"token 数", fmt.Sprintf("%d", len(tokens))},
@@ -176,7 +174,7 @@ func (a *App) newServerImportLegacyCommand() *cobra.Command {
 				return usageErrorf("必须提供 --data-dir 与 --config-dir")
 			}
 			ctx := context.Background()
-			cfg, db, err := a.openServerDB(ctx)
+			_, db, err := a.openServerDB(ctx)
 			if err != nil {
 				return err
 			}
@@ -188,7 +186,6 @@ func (a *App) newServerImportLegacyCommand() *cobra.Command {
 			if a.opts.json {
 				return a.printJSON(map[string]any{
 					"ok":            true,
-					"base_path":     cfg.Server.BasePath,
 					"rooms":         result.Rooms,
 					"samples":       result.Samples,
 					"archives":      result.Archives,

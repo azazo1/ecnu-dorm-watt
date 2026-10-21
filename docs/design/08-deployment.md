@@ -60,8 +60,6 @@ version = 1
 
 [server]
 bind = "127.0.0.1:20531"
-base_path = "/dormwatt/api"
-strict_path = true
 allow_insecure_http = false
 
 [auth]
@@ -119,44 +117,40 @@ sudo -u dormwatt dormwatt server run --config /etc/dormwatt/server.toml
 启动日志应包含:
 
 ```
-base_path=/dormwatt/api
-listen=127.0.0.1:20531
+bind=127.0.0.1:20531
 database=/var/lib/dormwatt/dormwatt.db
 ```
 
 ### 2.4 验证
 
 ```shell
-curl -sS http://127.0.0.1:20531/dormwatt/api/v1/health
+curl -sS http://127.0.0.1:20531/v1/health
 
 curl -sS \
   -H "Authorization: Bearer $TOKEN" \
-  http://127.0.0.1:20531/dormwatt/api/v1/status
+  http://127.0.0.1:20531/v1/status
 ```
 
 ## 3. 子路径挂载
 
 ### 3.1 规则
 
-- 路由前缀由 `server.base_path` 决定, 代码内部不硬编码域名或根路径.
-- 反向代理必须保留完整路径, 不能去掉前缀.
+- 服务端只注册 `/v1/...`, 不读取外部挂载前缀.
+- 反向代理负责把外部 `/dormwatt/api/...` 剥成后端 `/v1/...`.
+- 代码内部不硬编码域名或外部前缀.
 - 服务端内部注册:
 
 ```
-{base_path}/v1/health
-{base_path}/v1/status
-{base_path}/v1/records
+/v1/health
+/v1/status
+/v1/records
 ...
 ```
 
-- `base_path` 规范化:
-  - 必须以 `/` 开头.
-  - 去掉尾部 `/`.
-  - 不允许 `//`, `.`, `..`.
-  - 默认 `/dormwatt/api`.
-  - 设为 `/` 时表示挂在域名根.
-- 服务端返回的所有路径都是相对当前请求的前缀, 不生成绝对 URL.
-- 客户端配置的 `base_url` 必须包含同样的前缀, 并且不能以 `/` 结尾.
+- 代理必须去掉外部前缀.
+- 旧配置中的 `server.base_path` 与 `server.strict_path` 会被忽略, 应删除.
+- 客户端配置的 `base_url` 必须包含外部前缀, 并且不能以 `/` 结尾.
+- 如果代理保留前缀, 后端会收到 `/dormwatt/api/v1/...` 并返回 404.
 
 ### 3.2 Caddy
 
@@ -164,7 +158,7 @@ curl -sS \
 example.com {
     encode gzip
 
-    handle /dormwatt/api/* {
+    handle_path /dormwatt/api/* {
         reverse_proxy 127.0.0.1:20531
     }
 
@@ -176,8 +170,8 @@ example.com {
 
 要点:
 
-- `handle` 不会剥离路径, 后端收到 `/dormwatt/api/v1/...`.
-- 不要使用 `handle_path`, 它会剥掉前缀.
+- `handle_path` 会剥掉 `/dormwatt/api`, 后端收到 `/v1/...`.
+- 不要使用不带剥离的 `handle`, 否则后端会收到 `/dormwatt/api/v1/...` 并返回 404.
 - Caddy 自动处理 HTTPS.
 - 如果未来启用 SSE, 在 `reverse_proxy` 中关闭缓冲:
 
@@ -200,8 +194,8 @@ server {
     client_max_body_size 64k;
 
     location /dormwatt/api/ {
-        # 注意: proxy_pass 末尾没有斜杠, 保留完整路径.
-        proxy_pass http://127.0.0.1:20531;
+        # 末尾斜杠必须保留: 把 /dormwatt/api/v1/... 改成 /v1/...
+        proxy_pass http://127.0.0.1:20531/;
 
         proxy_http_version 1.1;
         proxy_set_header Host              $host;
@@ -222,25 +216,23 @@ server {
 }
 ```
 
-常见错误:
+要点:
 
-```nginx
-# 错误: 末尾斜杠会把 /dormwatt/api/v1/records 改成 /v1/records
-proxy_pass http://127.0.0.1:20531/;
-```
-
-如果确实需要代理剥离前缀, 则必须把服务端 `base_path` 设为 `/`, 让后端路由为 `/v1/...`. 两种方式只能选一种, 不能混用.
+- `proxy_pass` 末尾的 `/` 表示剥掉 `location` 前缀.
+- 如果去掉末尾斜杠, 后端会收到 `/dormwatt/api/v1/...` 并返回 404.
+- 如果使用 `rewrite` 剥离, 必须保证最终转发路径是 `/v1/...`.
 
 ### 3.4 子路径核对清单
 
-- [ ] `server.base_path` 与代理转发后的路径一致.
-- [ ] 客户端 `server.base_url` 以相同前缀结尾, 无尾部斜杠.
-- [ ] 代理没有使用 `handle_path` 或带斜杠的 `proxy_pass`.
+- [ ] 反向代理把外部 `/dormwatt/api/...` 剥成后端 `/v1/...`.
+- [ ] 客户端 `server.base_url` 写外部入口, 以 `/dormwatt/api` 结尾, 无尾部斜杠.
+- [ ] 代理使用 `handle_path` 或带斜杠的 `proxy_pass`.
 - [ ] `Authorization` 头没有被代理丢弃.
 - [ ] 代理允许 `PUT` 与 `DELETE` 方法.
 - [ ] 请求体上限不小于 64 KiB.
 - [ ] 超时时间大于服务端的 60 秒写超时.
-- [ ] 直接访问 `https://example.com/dormwatt/api/v1/health` 返回 200.
+- [ ] 直接访问 `http://127.0.0.1:20531/v1/health` 返回 200.
+- [ ] 外部访问 `https://example.com/dormwatt/api/v1/health` 返回 200.
 
 ### 3.5 客户端拼接
 
@@ -575,7 +567,7 @@ curl -fsS https://example.com/dormwatt/api/v1/health
 
 | 现象 | 可能原因 | 处理 |
 |------|----------|------|
-| 所有请求 404 | `base_path` 与代理路径不一致 | 打印启动日志中的 base_path, 检查代理是否剥离前缀 |
+| 所有请求 404 | 代理未剥离外部前缀 | 检查 `proxy_pass` 末尾斜杠或 Caddy `handle_path`; 直接访问后端 `/v1/health` |
 | 401 | token 缺失, 错误或已撤销 | `dormwatt server token list`, 重新创建并更新客户端 |
 | 403 | token 缺少 write scope | 创建带 `write` 的 token |
 | 502 `ecnu_not_logged_in` | 会话过期 | `dormwatt client login` |

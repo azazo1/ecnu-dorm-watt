@@ -28,13 +28,6 @@
 ### 3.1 配置
 
 - `server.toml` 默认值正确.
-- `base_path` 规范化:
-  - `/dormwatt/api` 保持不变.
-  - `/dormwatt/api/` 去掉尾部斜杠.
-  - `dormwatt/api` 拒绝.
-  - `//a//b` 拒绝或规范化后拒绝.
-  - `/a/../b` 拒绝.
-  - `/` 允许.
 - 配置版本:
   - 缺少 `version` 按 0 处理.
   - 旧版本迁移后字段正确.
@@ -150,19 +143,14 @@
 | write token 调 PUT session | 204 |
 | 健康检查无 token | 200 |
 
-### 4.3 子路径矩阵
+### 4.3 路径严格性
 
-对每组用例分别在以下配置运行:
+服务端只接受 `/v1/...`, 断言:
 
-- `base_path=/`
-- `base_path=/dormwatt/api`
-- `base_path=/a/b/c`
-
-断言:
-
-- `{base}/v1/health` 200.
-- 根路径 `/v1/health` 404.
-- 多一个斜杠或前缀不匹配 404.
+- `/v1/health` 200.
+- `/`, `/health`, `/dormwatt/api/v1/health` 404.
+- `/v1/health/`, `/v1//health`, `/v1/../v1/health` 404.
+- 404 使用 problem+json, 且不返回重定向.
 - 响应中不出现绝对 URL.
 - 静态路径与 API 路径不冲突.
 

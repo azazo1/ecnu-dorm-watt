@@ -45,7 +45,7 @@ func newTestEnv(t *testing.T) *testEnv {
 		case r.URL.Path == "/dormwatt/api/v1/health":
 			io.WriteString(w, `{"status":"ok","version":"0.1.0-test"}`)
 		case r.URL.Path == "/dormwatt/api/v1/status":
-			io.WriteString(w, `{"version":"0.1.0-test","server_time":"2026-01-24T14:35:32+08:00","uptime_seconds":3600,"base_path":"/dormwatt/api","active_room":{"id":1,"room_no":"4408_MH_83_257","elcarea":102,"elcbuis":"new-83_MH"},"session":{"state":"ok","updated_at":"2026-01-24T14:30:00+08:00"},"monitor":{"poll_interval_seconds":300,"state":"active","last_degree":33.43,"consecutive_failures":0},"storage":{"samples":12,"archives":1}}`)
+			io.WriteString(w, `{"version":"0.1.0-test","server_time":"2026-01-24T14:35:32+08:00","uptime_seconds":3600,"active_room":{"id":1,"room_no":"4408_MH_83_257","elcarea":102,"elcbuis":"new-83_MH"},"session":{"state":"ok","updated_at":"2026-01-24T14:30:00+08:00"},"monitor":{"poll_interval_seconds":300,"state":"active","last_degree":33.43,"consecutive_failures":0},"storage":{"samples":12,"archives":1}}`)
 		case r.URL.Path == "/dormwatt/api/v1/degree":
 			io.WriteString(w, `{"degree":33.43,"queried_at":"2026-01-24T14:35:32+08:00","source":"upstream"}`)
 		default:

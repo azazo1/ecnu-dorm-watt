@@ -2,30 +2,6 @@ package config
 
 import "testing"
 
-func TestNormalizeBasePath(t *testing.T) {
-	valid := map[string]string{
-		"/":              "/",
-		"/dormwatt/api":  "/dormwatt/api",
-		"/dormwatt/api/": "/dormwatt/api",
-		"/a/b":           "/a/b",
-	}
-	for in, want := range valid {
-		got, err := NormalizeBasePath(in)
-		if err != nil {
-			t.Fatalf("%q rejected: %v", in, err)
-		}
-		if got != want {
-			t.Fatalf("%q -> %q, want %q", in, got, want)
-		}
-	}
-	invalid := []string{"", "dormwatt/api", "/a//b", "/a/../b", "/a b", "/a?b"}
-	for _, in := range invalid {
-		if _, err := NormalizeBasePath(in); err == nil {
-			t.Fatalf("%q accepted", in)
-		}
-	}
-}
-
 func TestDefaultConfigsValidate(t *testing.T) {
 	server := DefaultServer()
 	if err := ValidateServer(&server); err != nil {

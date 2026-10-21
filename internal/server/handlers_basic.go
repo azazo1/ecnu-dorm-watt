@@ -81,7 +81,6 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 		Version:      s.version,
 		ServerTime:   s.exportTime(now),
 		UptimeSecond: uptime,
-		BasePath:     s.BasePath(),
 		ActiveRoom:   active,
 		Session:      session,
 		Monitor:      monitor,

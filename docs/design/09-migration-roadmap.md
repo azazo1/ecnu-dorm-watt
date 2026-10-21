@@ -19,7 +19,7 @@
 - 客户端从 Tauri 桌面应用改为 Go CLI + 本地 Web 宿主 + 系统托盘.
 - 鉴权从 mTLS 改为 Bearer Token.
 - 存储从 CSV 文件改为 SQLite.
-- API 从根路径改为可配置子路径, 并统一错误模型.
+- API 固定为 `/v1/...`, 外部子路径由反向代理挂载.
 - 房间选择从浏览器注入改为上游目录接口.
 
 不保留:
@@ -68,9 +68,9 @@ base_url = https://example.com/dormwatt/api
 GET      https://example.com/dormwatt/api/v1/degree
 ```
 
-- 所有路由都在 `{base_path}/v1` 下.
-- 客户端必须使用保留路径的拼接函数.
-- 服务端必须用子路由挂载, 不能假设根路径.
+- 服务端路由固定为 `/v1/...`.
+- 外部 `/dormwatt/api` 由反向代理挂载并剥离.
+- 客户端必须使用保留路径的拼接函数, 不能丢掉 `base_url` 中的外部前缀.
 
 ### 2.3 响应包裹
 
@@ -205,7 +205,7 @@ dormwatt server import-legacy \
 |------|--------|--------|------|
 | 鉴权 | mTLS 双向证书 | Bearer token + scope | 部署简单, 可撤销 |
 | 默认监听 | `0.0.0.0:20531` | `127.0.0.1:20531` | 默认安全, 由代理对外 |
-| API 前缀 | 根路径 | 可配置 `{base_path}/v1` | 支持子路径部署 |
+| API 前缀 | 根路径 | 后端固定 `/v1`, 外部前缀由代理挂载 | 支持子路径部署 |
 | 错误表达 | 大量 200 + Err | 正确 HTTP 状态 + problem+json | 可观测与可编程 |
 | 采集周期 | 固定 10 秒 | 默认 300 秒, 可配置 | 降低学校接口压力 |
 | 失败处理 | 无退避, 10 秒重试 | 指数退避 + 抖动 | 避免雪崩 |
@@ -259,12 +259,13 @@ dormwatt server import-legacy \
 - Bearer 鉴权与 scope 中间件.
 - ECNU 客户端, 采集循环, 状态机.
 - API: health, whoami, status, degree, records, rooms, session.
-- 子路径路由与规范化.
+- 子路径代理转发与后端 `/v1` 路由.
 - 单元与集成测试.
 
 验收:
 
-- `base_path=/dormwatt/api` 下全部接口通过.
+- 后端 `/v1` 下全部接口通过.
+- 外部 `/dormwatt/api` 经反向代理剥离后访问通过.
 - 401 / 403 / 409 / 422 / 502 行为符合文档.
 - 采集样本只在变化时写入.
 - token 撤销立即生效.
@@ -393,8 +394,8 @@ dormwatt server import-legacy \
    - 当前设计: Web 只由本地客户端托管, 浏览器不直连服务端.
    - 如果希望 `https://example.com/dormwatt/` 直接打开 Web, 需要额外的浏览器鉴权方案, 与当前 token 模型冲突.
 9. `/v1` 版本段.
-   - 当前使用 `{base_path}/v1/...`.
-   - 是否希望直接 `{base_path}/...` 以缩短路径.
+   - 当前使用 `/v1/...`; 外部前缀由反向代理挂载.
+   - 是否希望直接 `/...` 以缩短路径.
 10. CLI `open` 是否自动拉起 `serve`.
     - 当前设计: 不自动拉起, 明确提示.
 11. 构建与产物形态.
@@ -405,7 +406,7 @@ dormwatt server import-legacy \
 
 ## 8. 验收总则
 
-- 所有 API 在 `base_path=/dormwatt/api` 下通过集成测试.
+- 所有 API 在 `/v1` 下通过集成测试.
 - 所有写操作有权限校验, 审计日志与明确错误码.
 - 凭据不进入日志, 不进入浏览器存储, 不出现在 URL.
 - 归档操作具备事务性, 失败不丢数据.

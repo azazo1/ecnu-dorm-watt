@@ -341,7 +341,7 @@ Web/CLI -> POST /v1/archives
 - 集成测试:
   - `httptest` 起服务端, 使用临时 SQLite 与假 ECNU 上游.
   - 走完整 HTTP 流程: 认证, 上传会话, 设置房间, 采集, 归档, 下载.
-  - 在 `base_path=/dormwatt/api` 下跑同一组测试.
+  - 服务端固定使用 `/v1/...`; 外部子路径由反向代理剥离.
 - 本地 API 测试:
   - Host/Origin/自定义头校验.
   - 无 CORS 头.
@@ -360,7 +360,7 @@ Web/CLI -> POST /v1/archives
 | SSO 流程变化 | 自动登录失效 | 手动粘贴 cookie 作为兜底 |
 | 子路径拼接错误 | 全站 404 | 统一 joinBaseURL, 集成测试覆盖 |
 | SQLite 并发写 | 偶发 busy | WAL, busy_timeout, 短事务 |
-| 反向代理剥离前缀 | 路由不匹配 | 部署要求保留前缀, 启动日志打印 base_path |
+| 反向代理未剥离前缀 | 路由不匹配 | 部署要求代理剥离, 服务端固定 `/v1` |
 | 本地端口被占用 | serve 启动失败 | 明确错误并提示改端口 |
 | Chrome 不存在 | 自动登录不可用 | 手动模式兜底, 文档写明依赖 |
 | 服务端时钟漂移 | 样本时间异常 | 启动时记录时间, 展示 NTP 提示 |

@@ -4,35 +4,9 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"path"
 	"strings"
 	"time"
 )
-
-// NormalizeBasePath 校验并规范化挂载前缀.
-func NormalizeBasePath(raw string) (string, error) {
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return "", fmt.Errorf("base_path is empty")
-	}
-	if !strings.HasPrefix(raw, "/") {
-		return "", fmt.Errorf("base_path must start with /")
-	}
-	if strings.ContainsAny(raw, "?# \t\r\n") {
-		return "", fmt.Errorf("base_path contains invalid character")
-	}
-	cleaned := path.Clean(raw)
-	if cleaned != raw && cleaned+"/" != raw {
-		return "", fmt.Errorf("base_path is not normalized: %s", raw)
-	}
-	if strings.Contains(cleaned, "..") {
-		return "", fmt.Errorf("base_path must not contain ..")
-	}
-	if cleaned == "/" {
-		return "/", nil
-	}
-	return strings.TrimSuffix(cleaned, "/"), nil
-}
 
 // ValidateServer 校验服务端配置.
 func ValidateServer(cfg *ServerConfig) error {
@@ -42,11 +16,6 @@ func ValidateServer(cfg *ServerConfig) error {
 	if _, _, err := net.SplitHostPort(cfg.Server.Bind); err != nil {
 		return fmt.Errorf("server.bind: %w", err)
 	}
-	base, err := NormalizeBasePath(cfg.Server.BasePath)
-	if err != nil {
-		return fmt.Errorf("server.base_path: %w", err)
-	}
-	cfg.Server.BasePath = base
 	if cfg.Server.MaxBodyBytes <= 0 {
 		return fmt.Errorf("server.max_body_bytes must be positive")
 	}

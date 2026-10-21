@@ -81,8 +81,6 @@ version = 1
 
 [server]
 bind = "127.0.0.1:20531"
-base_path = "/dormwatt/api"
-strict_path = true
 allow_insecure_http = false
 max_body_bytes = 65536
 read_header_timeout = "10s"
@@ -134,8 +132,6 @@ max_backups = 14
 字段说明:
 
 - `bind`: 默认只监听回环, 由反向代理对外.
-- `base_path`: 公网挂载前缀, 规范化后不含尾部斜杠.
-- `strict_path`: true 时, `base_path` 之外的请求统一 404.
 - `allow_insecure_http`: 非回环明文监听开关, 默认 false.
 - `poll_interval`: 采集周期, 默认 300 秒, 允许范围 10 秒到 1 小时.
 - `degree_change_threshold`: 变化超过该值才记录新样本, 默认 0.01 度.
