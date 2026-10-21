@@ -29,11 +29,15 @@ build-server: web
 
 # 运行服务端
 server:
-    go run ./cmd/dormwatt server run
+    @mkdir -p .tmp
+    @CGO_ENABLED=0 go build -tags notray -o .tmp/dormwatt-server-dev ./cmd/dormwatt
+    @exec ./.tmp/dormwatt-server-dev server run
 
 # 运行本地客户端, 含托盘
 client:
-    go run ./cmd/dormwatt client serve
+    @mkdir -p .tmp
+    @CGO_ENABLED=1 go build -o .tmp/dormwatt-client-dev ./cmd/dormwatt
+    @exec ./.tmp/dormwatt-client-dev client serve
 
 # 创建服务端 token
 token name scope="read,write":

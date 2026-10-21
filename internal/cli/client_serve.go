@@ -97,6 +97,7 @@ func (a *App) newServeCommand() *cobra.Command {
 			if err := srv.Start(); err != nil {
 				return exitErr(ExitDaemon, fmt.Errorf("%v\n请检查端口是否被占用, 或使用 --port 指定其他端口", err))
 			}
+			defer a.log.Info("本地服务已关闭")
 			defer srv.Stop()
 
 			ctx, stopSignals := signalContext()
@@ -133,11 +134,16 @@ func (a *App) newServeCommand() *cobra.Command {
 			if !useTray {
 				select {
 				case <-ctx.Done():
+					a.log.Info("收到关闭信号")
 				case <-srv.Done():
 				}
-				return nil
+			} else {
+				if err := a.runTray(ctx, cancel, srv); err != nil {
+					return err
+				}
 			}
-			return a.runTray(ctx, cancel, srv)
+			a.log.Info("正在关闭本地服务")
+			return nil
 		},
 	}
 	cmd.Flags().IntVar(&port, "port", 0, "覆盖监听端口, 只改本次运行")
