@@ -1,8 +1,8 @@
 .DS_Store
 .tmp/
 .agents/
-dist/
-bin/
+/dist/
+/bin/
 coverage.out
 *.log
 *.db

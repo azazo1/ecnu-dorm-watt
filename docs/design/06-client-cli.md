@@ -486,6 +486,30 @@ dormwatt client quit
 - 未运行时退出码 7, 提示没有运行中的守护进程.
 - 托盘 Quit 菜单走同一关闭路径.
 
+### 9.5 系统通知
+
+守护进程根据轮询到的状态主动发送系统通知, 不依赖浏览器页面是否打开.
+
+触发规则:
+
+- 健康状态变化: 服务端不可达, 断网, TLS 错误, 未登录, 未选房, 上游异常.
+- 状态恢复: 从异常回到 `ok`.
+- 低电量: 当前电量低于阈值, 首次立即通知, 之后 30 分钟最多一次.
+- 电量回升: 电量增加时通知, 10 分钟最多一次.
+
+实现:
+
+- 使用 `github.com/gen2brain/beeep` 作为通用回退, 并优先使用平台原生命令.
+- 通知图标由程序生成 64x64 PNG, 缓存在客户端运行目录.
+- Linux: `notify-send` 的 `--action` 与 `--wait`, 点击后执行 `xdg-open`.
+- Windows: PowerShell Toast 的 `launch` 协议, 点击后由系统打开默认浏览器.
+- macOS: 优先 `terminal-notifier` 的 `-appIcon` 与 `-execute`; 未安装时使用 `osascript` 的 JXA ObjC 桥注册通知代理, 点击后打开本地 Web, 无需额外安装.
+- 无桌面会话时不启用.
+- 通知开关来自 `client.toml` 的 `local.notify`, 默认 true.
+- 托盘模式与无托盘模式都生效.
+- 通知内容不包含 token, cookie 或 CSRF.
+- 发送失败只记录 warn 日志, 不影响轮询.
+
 ## 10. 诊断
 
 ### 10.1 client whoami

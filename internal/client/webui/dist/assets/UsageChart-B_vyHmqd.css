@@ -1,0 +1,1 @@
+.usage-chart[data-v-9a0833e3]{display:flex;min-width:0;flex-direction:column;gap:8px}.chart-canvas[data-v-9a0833e3]{width:100%;height:var(--chart-height, 340px);min-height:220px}.chart-hint[data-v-9a0833e3]{color:var(--text-muted);font-size:12px}@media(max-width:768px){.chart-canvas[data-v-9a0833e3]{height:240px}}

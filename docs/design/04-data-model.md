@@ -178,6 +178,8 @@ allow_remote = false
 open_browser = true
 # auto: 有桌面会话时启用托盘; on: 强制启用; off: 关闭.
 tray = "auto"
+# 是否发送系统通知.
+notify = true
 
 [monitor]
 poll_interval = "10s"
@@ -198,6 +200,7 @@ file = true
 - `token` 为服务端 Bearer token, 文件权限 0600.
 - `local.bind` 默认回环, 非回环需要 `allow_remote=true` 且所有本地 API 请求带 token.
 - `local.tray` 控制托盘: `auto` 在检测到桌面会话时启用, `on` 强制启用, `off` 关闭. 命令行 `--tray` / `--no-tray` 优先于配置.
+- `local.notify` 控制系统通知: 状态异常, 低电量与电量回升时由守护进程调用系统通知中心. 无桌面会话时自动跳过.
 - `monitor.poll_interval` 是本地守护进程刷新上游状态与低电量判断的周期.
 - `ui.refresh_interval` 是 Web 页面轮询本地 API 的周期.
 - `ui.timezone` 只影响展示与 CSV 导出.
