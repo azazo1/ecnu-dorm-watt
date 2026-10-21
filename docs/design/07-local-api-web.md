@@ -529,7 +529,7 @@ ECNU 登录已失效. 在终端运行 dormwatt client login 重新登录,
 
 守护进程通过平台原生通知发送提醒, 点击通知打开本地 Web.
 
-- 图标由程序生成 64x64 PNG, 缓存在客户端运行目录.
+- 图标内嵌 256x256 PNG, 缓存在客户端运行目录, 文件名包含图像摘要以避免复用旧版图标.
 - Linux 使用 `notify-send` 的 action 与 wait, 点击后 `xdg-open`.
 - Windows 使用 PowerShell Toast 的 protocol launch.
 - macOS 优先 `terminal-notifier`; 未安装时使用 `osascript` 的 JXA ObjC 桥, 点击后打开本地 Web, 无需额外安装.

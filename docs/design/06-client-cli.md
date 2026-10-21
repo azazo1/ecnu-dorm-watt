@@ -500,7 +500,7 @@ dormwatt client quit
 实现:
 
 - 使用 `github.com/gen2brain/beeep` 作为通用回退, 并优先使用平台原生命令.
-- 通知图标由程序生成 64x64 PNG, 缓存在客户端运行目录.
+- 通知图标内嵌 256x256 PNG, 使用深蓝圆角底, 白色电池轮廓与琥珀色闪电. 运行目录中的缓存文件名包含图像摘要, 随图标更新自动更换.
 - Linux: `notify-send` 的 `--action` 与 `--wait`, 点击后执行 `xdg-open`.
 - Windows: PowerShell Toast 的 `launch` 协议, 点击后由系统打开默认浏览器.
 - macOS: 优先 `terminal-notifier` 的 `-appIcon` 与 `-execute`; 未安装时使用 `osascript` 的 JXA ObjC 桥注册通知代理, 点击后打开本地 Web, 无需额外安装.
