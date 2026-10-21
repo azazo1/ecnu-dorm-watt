@@ -79,6 +79,10 @@ func (a *App) rootCommand() *cobra.Command {
 	root.SetErr(a.stderr)
 	root.SetIn(a.stdin)
 
+	version, _, _ := versionInfo()
+	root.Version = version
+	root.SetVersionTemplate("dormwatt {{.Version}}\n")
+
 	pf := root.PersistentFlags()
 	pf.StringVar(&a.opts.configPath, "config", os.Getenv("DORMWATT_CONFIG"), "配置文件路径, 默认按子命令使用 client.toml 或 server.toml")
 	pf.BoolVar(&a.opts.json, "json", false, "输出机器可读的 JSON")

@@ -27,6 +27,10 @@ build: web
 build-server: web
     CGO_ENABLED=0 go build -tags notray -trimpath -ldflags "-s -w" -o dist/dormwatt-server ./cmd/dormwatt
 
+# 生成当前平台发布归档, 包含桌面版与服务端版
+dist:
+    uv run --no-project python scripts/dist.py
+
 # 运行服务端
 server:
     @mkdir -p .tmp

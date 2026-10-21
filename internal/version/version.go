@@ -3,14 +3,14 @@ package version
 import "runtime/debug"
 
 var (
-	Version   = "dev"
+	Version   = "dev-build"
 	Commit    = "unknown"
 	BuildTime = "unknown"
 )
 
 // Info 返回版本, 提交与构建时间.
 func Info() (string, string, string) {
-	if Version != "dev" {
+	if Version != "dev-build" {
 		return Version, Commit, BuildTime
 	}
 	if bi, ok := debug.ReadBuildInfo(); ok {
