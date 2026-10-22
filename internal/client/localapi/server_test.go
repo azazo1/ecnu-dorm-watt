@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -319,8 +320,10 @@ func TestSettingsWrite(t *testing.T) {
 	if err != nil {
 		t.Fatalf("stat config: %v", err)
 	}
-	if perm := info.Mode().Perm(); perm != 0o600 {
-		t.Fatalf("config permission = %04o", perm)
+	if runtime.GOOS != "windows" {
+		if perm := info.Mode().Perm(); perm != 0o600 {
+			t.Fatalf("config permission = %04o", perm)
+		}
 	}
 	cfg, _, err := config.LoadClient(env.srv.opts.ConfigPath, false)
 	if err != nil {
@@ -338,8 +341,10 @@ func TestShutdownRemovesRuntime(t *testing.T) {
 	if err != nil {
 		t.Fatalf("runtime.json 未写入: %v", err)
 	}
-	if perm := info.Mode().Perm(); perm != 0o600 {
-		t.Fatalf("runtime.json 权限 = %04o, want 0600", perm)
+	if runtime.GOOS != "windows" {
+		if perm := info.Mode().Perm(); perm != 0o600 {
+			t.Fatalf("runtime.json 权限 = %04o, want 0600", perm)
+		}
 	}
 	resp := env.request(t, http.MethodPost, "/api/shutdown", "{}", func(r *http.Request) {
 		r.Header.Set("Authorization", "Bearer "+env.srv.Token())

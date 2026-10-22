@@ -7,6 +7,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -81,15 +82,19 @@ func TestOpenAndMigrate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("读取数据库文件信息失败: %v", err)
 	}
-	if perm := info.Mode().Perm(); perm != 0o600 {
-		t.Errorf("数据库文件权限为 %o, 期望 600", perm)
+	if runtime.GOOS != "windows" {
+		if perm := info.Mode().Perm(); perm != 0o600 {
+			t.Errorf("数据库文件权限为 %o, 期望 600", perm)
+		}
 	}
 	dirInfo, err := os.Stat(filepath.Dir(path))
 	if err != nil {
 		t.Fatalf("读取数据目录信息失败: %v", err)
 	}
-	if perm := dirInfo.Mode().Perm(); perm != 0o700 {
-		t.Errorf("数据目录权限为 %o, 期望 700", perm)
+	if runtime.GOOS != "windows" {
+		if perm := dirInfo.Mode().Perm(); perm != 0o700 {
+			t.Errorf("数据目录权限为 %o, 期望 700", perm)
+		}
 	}
 
 	// 用同样的 DSN 打开旁路连接, 检查连接参数已生效.
