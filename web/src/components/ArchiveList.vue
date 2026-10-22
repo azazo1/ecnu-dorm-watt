@@ -28,6 +28,7 @@ withDefaults(
 defineEmits<{
   retry: []
   create: []
+  view: [archive: ArchiveMeta]
   delete: [archive: ArchiveMeta]
 }>()
 </script>
@@ -74,6 +75,14 @@ defineEmits<{
             </td>
             <td data-label="操作">
               <div class="archive-actions">
+                <button
+                  type="button"
+                  class="btn btn-sm"
+                  @click="$emit('view', archive)"
+                >
+                  <AppIcon name="chart" :size="14" />
+                  查看
+                </button>
                 <a
                   class="btn btn-sm"
                   :href="archiveCsvUrl(archive.name, archive.room_id)"

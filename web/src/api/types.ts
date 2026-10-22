@@ -133,6 +133,11 @@ export interface ArchivesResponse {
   archives: ArchiveMeta[]
 }
 
+export interface ArchiveDetailResponse {
+  archive: ArchiveMeta
+  records: RecordSample[]
+}
+
 export interface AreaOption {
   area_id: string
   area_name: string

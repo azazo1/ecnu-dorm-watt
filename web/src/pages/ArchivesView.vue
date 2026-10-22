@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { api } from '@/api/client'
-import type { ArchiveMeta, Room } from '@/api/types'
+import type { ArchiveMeta, RecordSample, Room } from '@/api/types'
 import ArchiveCreateDialog from '@/components/ArchiveCreateDialog.vue'
+import ArchiveDetailDialog from '@/components/ArchiveDetailDialog.vue'
 import ArchiveList from '@/components/ArchiveList.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import AppIcon from '@/components/AppIcon.vue'
@@ -36,9 +37,17 @@ const deleteOpen = ref(false)
 const deleteBusy = ref(false)
 const deleteError = ref<UiError | null>(null)
 
+const detailOpen = ref(false)
+const detailArchive = ref<ArchiveMeta | null>(null)
+const detailRecords = ref<RecordSample[]>([])
+const detailLoading = ref(false)
+const detailError = ref<UiError | null>(null)
+
 let archivesController: AbortController | null = null
 let archivesSequence = 0
 let roomsController: AbortController | null = null
+let detailController: AbortController | null = null
+let detailSequence = 0
 let pollTimer: number | null = null
 
 const showRoom = computed(() => roomFilter.value === 'all')
@@ -126,6 +135,52 @@ function onRoomFilterChange(event: Event): void {
 function onIncludeDeletedChange(): void {
   void loadArchives()
 }
+
+async function openDetail(archive: ArchiveMeta): Promise<void> {
+  detailController?.abort()
+  detailController = new AbortController()
+  const current = ++detailSequence
+  detailArchive.value = archive
+  detailRecords.value = []
+  detailError.value = null
+  detailLoading.value = true
+  detailOpen.value = true
+  try {
+    const data = await api.getArchiveSamples(archive.name, archive.room_id, detailController.signal)
+    if (current !== detailSequence) {
+      return
+    }
+    detailArchive.value = data.archive
+    detailRecords.value = data.records
+  } catch (caught) {
+    if (caught instanceof DOMException && caught.name === 'AbortError') {
+      return
+    }
+    if (current !== detailSequence) {
+      return
+    }
+    detailRecords.value = []
+    detailError.value = toUiError(caught)
+  } finally {
+    if (current === detailSequence) {
+      detailLoading.value = false
+    }
+  }
+}
+
+function retryDetail(): void {
+  if (detailArchive.value) {
+    void openDetail(detailArchive.value)
+  }
+}
+
+watch(detailOpen, (open) => {
+  if (!open) {
+    detailController?.abort()
+    detailSequence++
+    detailLoading.value = false
+  }
+})
 
 function openCreate(): void {
   if (archiveTargetRoom.value === null) {
@@ -229,6 +284,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   archivesController?.abort()
   roomsController?.abort()
+  detailController?.abort()
   document.removeEventListener('visibilitychange', handleVisibility)
   window.removeEventListener('online', handleOnline)
   if (pollTimer !== null) {
@@ -242,7 +298,7 @@ onBeforeUnmount(() => {
     <header class="page-header">
       <div class="page-heading">
         <h1 class="page-title">归档</h1>
-        <p class="page-subtitle">把指定时间范围的样本归档保存, 并可下载 CSV.</p>
+        <p class="page-subtitle">把指定时间范围的样本归档保存, 并可在线查看或下载 CSV.</p>
       </div>
       <div class="page-actions">
         <button
@@ -307,6 +363,7 @@ onBeforeUnmount(() => {
         :show-room="showRoom"
         @retry="loadArchives"
         @create="openCreate"
+        @view="openDetail"
         @delete="askDelete"
       />
     </section>
@@ -318,6 +375,16 @@ onBeforeUnmount(() => {
       :busy="createBusy"
       :error="createError"
       @submit="submitCreate"
+    />
+
+    <ArchiveDetailDialog
+      v-model="detailOpen"
+      :archive="detailArchive"
+      :records="detailRecords"
+      :time-zone="timezone"
+      :loading="detailLoading"
+      :error="detailError"
+      @retry="retryDetail"
     />
 
     <ConfirmDialog

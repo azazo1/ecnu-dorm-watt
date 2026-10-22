@@ -27,6 +27,8 @@ func TestProxyPathMapping(t *testing.T) {
 		{http.MethodPut, "/api/session", "/v1/session", true, true},
 		{http.MethodGet, "/api/archives/202601", "/v1/archives/202601", true, true},
 		{http.MethodDelete, "/api/archives/202601", "/v1/archives/202601", true, true},
+		{http.MethodGet, "/api/archives/202601/samples", "/v1/archives/202601/samples", true, true},
+		{http.MethodDelete, "/api/archives/202601/samples", "/v1/archives/202601/samples", true, false},
 		{http.MethodGet, "/api/unknown", "", false, false},
 		{http.MethodGet, "/api/archives", "/v1/archives", true, true},
 		{http.MethodGet, "/api/rooms/abc/info", "", false, false},

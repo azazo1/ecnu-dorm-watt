@@ -2,6 +2,7 @@ import type {
   ArchiveMeta,
   ArchiveQuery,
   ArchivesResponse,
+  ArchiveDetailResponse,
   BuildingsResponse,
   CatalogQuery,
   CatalogRoomsResponse,
@@ -291,6 +292,17 @@ export const api = {
 
   createArchive(input: CreateArchiveInput): Promise<ArchiveMeta> {
     return request('/archives', { method: 'POST', body: input })
+  },
+
+  getArchiveSamples(
+    name: string,
+    roomId: number,
+    signal?: AbortSignal,
+  ): Promise<ArchiveDetailResponse> {
+    return request(`/archives/${encodeURIComponent(name)}/samples`, {
+      query: { room_id: roomId },
+      signal,
+    })
   },
 
   deleteArchive(name: string, roomId: number): Promise<void> {

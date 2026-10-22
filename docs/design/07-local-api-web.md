@@ -171,6 +171,7 @@ Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'
 | `/api/session` | `/v1/session` | GET, PUT, DELETE |
 | `/api/archives` | `/v1/archives` | GET, POST |
 | `/api/archives/{name}` | `/v1/archives/{name}` | GET, DELETE |
+| `/api/archives/{name}/samples` | `/v1/archives/{name}/samples` | GET |
 
 透传规则:
 
@@ -412,6 +413,7 @@ delta[i] = degree[i-1] - degree[i]
 
 - 卡片或表格列出归档: 名称, 起止时间, 样本数, 创建时间.
 - 新建归档: 时间范围与可选名称.
+- 查看: 打开归档详情, 展示电量曲线与样本明细.
 - 下载: 直接链接 `/api/archives/{name}`.
 - 删除: 二次确认, 说明是软删除.
 - 空状态提示先创建归档.

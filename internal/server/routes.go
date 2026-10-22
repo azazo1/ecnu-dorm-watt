@@ -105,6 +105,9 @@ func (s *Server) routes() http.Handler {
 		routeDef{method: http.MethodGet, handler: http.HandlerFunc(s.handleDownloadArchive), scope: scopeRead},
 		routeDef{method: http.MethodDelete, handler: http.HandlerFunc(s.handleDeleteArchive), scope: scopeWrite},
 	)
+	s.route(mux, "/v1/archives/{name}/samples",
+		routeDef{method: http.MethodGet, handler: http.HandlerFunc(s.handleArchiveSamples), scope: scopeRead},
+	)
 
 	// 未匹配的 /v1 路径统一返回 problem 格式的 404.
 	mux.Handle("/v1/", http.HandlerFunc(s.handleNotFound))

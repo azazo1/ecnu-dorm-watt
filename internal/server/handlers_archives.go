@@ -208,6 +208,53 @@ func (s *Server) handleDownloadArchive(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// handleArchiveSamples 以 JSON 返回归档元数据与样本, 供在线查看.
+func (s *Server) handleArchiveSamples(w http.ResponseWriter, r *http.Request) {
+	name := r.PathValue("name")
+	if name == "" {
+		s.writeParamProblem(w, r, invalidRequestf("归档名称不能为空"))
+		return
+	}
+	if msg := archiveNameProblem(name); msg != "" {
+		s.writeParamProblem(w, r, invalidRequestf("%s", msg))
+		return
+	}
+	roomID, ok := s.queryArchiveRoom(w, r)
+	if !ok {
+		return
+	}
+	ctx := r.Context()
+	meta, err := s.db.GetArchive(ctx, roomID, name)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			s.writeProblem(w, r, http.StatusNotFound, protocol.CodeNotFound, "", "归档不存在")
+			return
+		}
+		s.writeStorageProblem(w, r, err)
+		return
+	}
+	if meta.RecordsNum > maxRecordsLimit {
+		s.writeProblem(w, r, http.StatusUnprocessableEntity, protocol.CodeRecordsTooMany, "",
+			fmt.Sprintf("归档样本数 %d 超过在线查看上限 %d, 请下载 CSV 查看", meta.RecordsNum, maxRecordsLimit))
+		return
+	}
+	records := make([]protocol.Sample, 0, meta.RecordsNum)
+	if err := s.db.StreamArchive(ctx, meta.ID, func(sample store.Sample) error {
+		records = append(records, protocol.Sample{
+			Time:   s.exportTime(sample.Time),
+			Degree: roundDegree(sample.Degree),
+		})
+		return nil
+	}); err != nil {
+		s.writeStorageProblem(w, r, err)
+		return
+	}
+	s.writeJSON(w, r, http.StatusOK, protocol.ArchiveDetail{
+		Archive: s.exportArchive(*meta),
+		Records: records,
+	})
+}
+
 // handleDeleteArchive 软删除归档.
 func (s *Server) handleDeleteArchive(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")

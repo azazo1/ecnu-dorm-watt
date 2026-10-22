@@ -57,6 +57,8 @@ func proxyPath(r *http.Request) (string, bool, bool) {
 		return "", false, false
 	case len(seg) == 2 && seg[0] == "archives" && seg[1] != "":
 		return single(http.MethodGet, http.MethodDelete)
+	case len(seg) == 3 && seg[0] == "archives" && seg[1] != "" && seg[2] == "samples":
+		return single(http.MethodGet)
 	case len(seg) == 3 && seg[0] == "rooms":
 		if _, err := strconv.ParseInt(seg[1], 10, 64); err != nil {
 			return "", false, false

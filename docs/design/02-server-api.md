@@ -262,6 +262,7 @@
 | GET | `/v1/archives` | read | 归档列表 |
 | POST | `/v1/archives` | write | 创建归档 |
 | GET | `/v1/archives/{name}` | read | 下载归档 CSV |
+| GET | `/v1/archives/{name}/samples` | read | 在线查看归档 JSON |
 | DELETE | `/v1/archives/{name}` | write | 软删除归档 |
 
 ## 4. 基础接口
@@ -621,6 +622,30 @@ JSON 响应:
 - CSV 格式与 `/records` 的 `format=csv` 一致.
 - 不存在或已删除返回 404 `not_found`.
 - 名称为空或非法返回 400 `invalid_request`.
+
+### 9.3.1 GET /v1/archives/{name}/samples
+
+- 返回归档元数据与样本 JSON, 供 Web 在线查看.
+- `name` 为 URL 编码的路径段, `room_id` 查询参数默认活动房间.
+- 样本按时间升序.
+- 样本数超过 `200000` 返回 422 `records_too_many`, 应改用 CSV 下载.
+- 不存在或已删除返回 404 `not_found`.
+
+```json
+{
+  "archive": {
+    "name": "20260101-20260131",
+    "room_id": 1,
+    "start_time": "2026-01-01T00:20:00+08:00",
+    "end_time": "2026-01-31T23:50:00+08:00",
+    "records_num": 892,
+    "created_at": "2026-02-01T10:00:00+08:00"
+  },
+  "records": [
+    {"time": "2026-01-01T00:20:00+08:00", "degree": 42.5}
+  ]
+}
+```
 
 ### 9.4 归档事务语义
 

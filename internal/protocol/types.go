@@ -126,6 +126,11 @@ type ArchiveMeta struct {
 	CreatedAt  time.Time `json:"created_at"`
 }
 
+type ArchiveDetail struct {
+	Archive ArchiveMeta `json:"archive"`
+	Records []Sample    `json:"records"`
+}
+
 type WhoAmI struct {
 	Name   string   `json:"name"`
 	Scopes []string `json:"scopes"`

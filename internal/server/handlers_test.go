@@ -395,6 +395,21 @@ func TestArchives(t *testing.T) {
 		t.Fatalf("重名归档 code = %q", code)
 	}
 
+	rec = doRequest(t, srv, http.MethodGet, "/v1/archives/a-range/samples?room_id="+strconv.FormatInt(roomA.ID, 10), token, "", nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("在线查看归档状态码 = %d, body=%s", rec.Code, rec.Body.String())
+	}
+	var detail protocol.ArchiveDetail
+	if err := json.Unmarshal(rec.Body.Bytes(), &detail); err != nil {
+		t.Fatalf("解析归档详情失败: %v", err)
+	}
+	if detail.Archive.Name != "a-range" || len(detail.Records) != 2 {
+		t.Fatalf("归档详情 = %+v", detail)
+	}
+	if detail.Records[0].Degree != 30 || detail.Records[1].Degree != 29 {
+		t.Fatalf("归档样本 = %+v", detail.Records)
+	}
+
 	rec = doRequest(t, srv, http.MethodGet, "/v1/archives/c-range", token, "", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("下载归档状态码 = %d, body=%s", rec.Code, rec.Body.String())
