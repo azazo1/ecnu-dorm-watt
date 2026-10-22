@@ -8,6 +8,7 @@ import AppIcon from '@/components/AppIcon.vue'
 import OfflineBanner from '@/components/OfflineBanner.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import Toast from '@/components/Toast.vue'
+import appIconUrl from '@/assets/app-icon.svg'
 import { formatNumber } from '@/utils/time'
 
 const settings = useSettingsStore()
@@ -63,7 +64,7 @@ onBeforeUnmount(() => {
 
     <aside class="sidebar">
       <RouterLink class="brand" to="/" aria-label="DormWatt 首页">
-        <span class="brand-mark">DW</span>
+        <img class="brand-icon" :src="appIconUrl" alt="" />
         <span class="brand-text">DormWatt</span>
       </RouterLink>
 
@@ -90,7 +91,7 @@ onBeforeUnmount(() => {
     <div class="app-main">
       <header class="topbar">
         <RouterLink class="topbar-brand" to="/" aria-label="DormWatt 首页">
-          <span class="brand-mark">DW</span>
+          <img class="brand-icon" :src="appIconUrl" alt="" />
           <span>DormWatt</span>
         </RouterLink>
 
@@ -212,19 +213,12 @@ onBeforeUnmount(() => {
   color: var(--text);
 }
 
-.brand-mark {
-  display: inline-flex;
+.brand-icon {
+  display: block;
   width: 30px;
   height: 30px;
   flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
   border-radius: 7px;
-  background: var(--accent);
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
 }
 
 .brand-text {
@@ -377,7 +371,7 @@ onBeforeUnmount(() => {
     display: inline-flex;
   }
 
-  .topbar-brand .brand-mark {
+  .topbar-brand .brand-icon {
     width: 26px;
     height: 26px;
   }

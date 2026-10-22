@@ -4,22 +4,29 @@ package tray
 
 import (
 	"bytes"
+	_ "embed"
 	"image"
 	"image/color"
+	"image/draw"
 	"image/png"
 	"sync"
 )
 
 const iconSize = 32
 
+//go:embed assets/icon.png
+var iconBasePNG []byte
+
 var (
 	iconMu    sync.Mutex
 	iconCache = map[string][]byte{}
+	iconBase  image.Image
+	baseOnce  sync.Once
 )
 
 // iconPNG 生成 32x32 的状态图标 PNG.
 //
-// 使用简单圆点而不是外部资源, 避免引入二进制文件.
+// 基础图标来自通知使用的 DormWatt 图标, 右上角叠加健康状态圆点.
 func iconPNG(kind string) []byte {
 	iconMu.Lock()
 	defer iconMu.Unlock()
@@ -27,25 +34,10 @@ func iconPNG(kind string) []byte {
 		return cached
 	}
 	img := image.NewNRGBA(image.Rect(0, 0, iconSize, iconSize))
-	base := iconColor(kind)
-	center := float64(iconSize) / 2
-	radius := 13.0
-	for y := 0; y < iconSize; y++ {
-		for x := 0; x < iconSize; x++ {
-			dx := float64(x) + 0.5 - center
-			dy := float64(y) + 0.5 - center
-			d := dx*dx + dy*dy
-			if d > radius*radius {
-				continue
-			}
-			// 边缘做一格抗锯齿.
-			alpha := uint8(255)
-			if d > (radius-1)*(radius-1) {
-				alpha = 160
-			}
-			img.SetNRGBA(x, y, color.NRGBA{R: base.R, G: base.G, B: base.B, A: alpha})
-		}
+	if base := baseIcon(); base != nil {
+		draw.Draw(img, img.Bounds(), base, image.Point{}, draw.Src)
 	}
+	drawStatusDot(img, iconColor(kind))
 	var buf bytes.Buffer
 	if err := png.Encode(&buf, img); err != nil {
 		return nil
@@ -53,6 +45,41 @@ func iconPNG(kind string) []byte {
 	data := buf.Bytes()
 	iconCache[kind] = data
 	return data
+}
+
+// baseIcon 解码内嵌的应用图标, 只执行一次.
+func baseIcon() image.Image {
+	baseOnce.Do(func() {
+		img, err := png.Decode(bytes.NewReader(iconBasePNG))
+		if err == nil {
+			iconBase = img
+		}
+	})
+	return iconBase
+}
+
+// drawStatusDot 在图标右上角绘制带白色描边的状态圆点.
+func drawStatusDot(img *image.NRGBA, base color.NRGBA) {
+	const (
+		cx     = 27.0
+		cy     = 5.0
+		outerR = 3.5
+		innerR = 2.3
+		white  = 240
+	)
+	for y := 0; y < 10; y++ {
+		for x := 22; x < 32; x++ {
+			dx := float64(x) + 0.5 - cx
+			dy := float64(y) + 0.5 - cy
+			d := dx*dx + dy*dy
+			switch {
+			case d <= innerR*innerR:
+				img.SetNRGBA(x, y, base)
+			case d <= outerR*outerR:
+				img.SetNRGBA(x, y, color.NRGBA{R: 255, G: 255, B: 255, A: white})
+			}
+		}
+	}
 }
 
 func iconColor(kind string) color.NRGBA {

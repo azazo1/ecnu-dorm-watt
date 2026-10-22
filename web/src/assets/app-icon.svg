@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>DormWatt</title>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#192b4e"/>
+      <stop offset="1" stop-color="#215777"/>
+    </linearGradient>
+  </defs>
+  <rect x="4.5" y="4.5" width="55" height="55" rx="13" fill="url(#background)"/>
+  <rect x="28" y="14.5" width="8" height="3.5" rx="1.5" fill="#f4f8ff"/>
+  <rect x="21.25" y="21.75" width="21.5" height="26.5" rx="3.75" fill="none" stroke="#f4f8ff" stroke-width="2.5"/>
+  <polygon points="34.5,24 25.5,35 31.5,35 29,44 39,31 33,31" fill="#ffcc66"/>
+</svg>
