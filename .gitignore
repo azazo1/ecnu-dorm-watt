@@ -12,6 +12,6 @@ coverage.out
 secrets/
 web/node_modules/
 web/dist/
-dormwatt
-dormwatt-notray
-dormwatt-tray.exe
+/dormwatt
+/dormwatt-notray
+/dormwatt-tray.exe
